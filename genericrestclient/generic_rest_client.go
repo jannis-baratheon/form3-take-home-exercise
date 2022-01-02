@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"path"
 )
 
 type GenericRestClient interface {
@@ -14,16 +15,16 @@ type GenericRestClient interface {
 	// Create(resourcePath string, json string) (*string, error)
 }
 
-type genericRestClientConfig struct {
-	baseApiUrl url.URL
+type GenericRestClientConfig struct {
+	BaseApiUrl url.URL
 }
 
 type genericRestClient struct {
 	httpClient *http.Client
-	config     genericRestClientConfig
+	config     GenericRestClientConfig
 }
 
-func createGenericRestClient(config genericRestClientConfig) GenericRestClient {
+func CreateGenericRestClient(config GenericRestClientConfig) GenericRestClient {
 	return &genericRestClient{
 		httpClient: &http.Client{},
 		config:     config,
@@ -39,13 +40,12 @@ type dataWrapperDTO struct {
 }
 
 func (c *genericRestClient) Fetch(resourcePath string, id string, res interface{}) error {
-	resourceUrl, err := c.config.baseApiUrl.Parse(fmt.Sprintf("%s/%s", resourcePath, id))
+	// copy base url
+	u := c.config.BaseApiUrl
+	// join base url and relative resource url
+	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/%s", resourcePath, id)) 
 
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("GET", resourceUrl.String(), nil)
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (c *genericRestClient) Fetch(resourcePath string, id string, res interface{
 		return err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		var errRespJson errorDTO
 		err = json.Unmarshal(body, &errRespJson)
 
