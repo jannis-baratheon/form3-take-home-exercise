@@ -28,12 +28,12 @@ var _ = Describe("RestResourceHandler", func() {
 		httpClient = &http.Client{}
 		server = ghttp.NewServer()
 		url, _ := url.Parse(fmt.Sprintf("%s/api/people", server.URL()))
-		config := restresourcehandler.
-			NewConfigBuilder().
-			SetDataPropertyName("data").
-			SetResourceEncoding(resourceEncoding).
-			SetResourceURL(*url).
-			Build()
+		config := restresourcehandler.RestResourceHandlerConfig{
+			IsDataWrapped: true,
+			DataPropertyName: "data",
+			ResourceEncoding: resourceEncoding,
+			ResourceURL: *url,
+		}
 		client = restresourcehandler.NewRestResourceHandler(httpClient, config)
 	})
 

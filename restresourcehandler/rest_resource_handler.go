@@ -3,11 +3,15 @@ package restresourcehandler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 )
+
+type RemoteErrorExtractor func(response *http.Response) error
 
 type RestResourceHandler interface {
 	Fetch(id string, params map[string]string, res interface{}) error
@@ -15,16 +19,18 @@ type RestResourceHandler interface {
 	Create(resource interface{}, res interface{}) error
 }
 
-type restResourceHandler struct {
-	HttpClient *http.Client
-	Config     restResourceHandlerConfig
+// TODO maxresponsesize, errordeserializer
+type RestResourceHandlerConfig struct {
+	RemoteErrorExtractor RemoteErrorExtractor
+	ResourceURL          url.URL
+	ResourceEncoding     string
+	DataPropertyName     string
+	IsDataWrapped        bool
 }
 
-func NewRestResourceHandler(httpClient *http.Client, config restResourceHandlerConfig) RestResourceHandler {
-	return &restResourceHandler{
-		Config:     config,
-		HttpClient: httpClient,
-	}
+type restResourceHandler struct {
+	HttpClient *http.Client
+	Config     RestResourceHandlerConfig
 }
 
 type requestParams struct {
@@ -36,6 +42,33 @@ type requestParams struct {
 	QueryParams         map[string]string
 	Resource            interface{}
 	Response            interface{}
+}
+
+func NewRestResourceHandler(httpClient *http.Client, config RestResourceHandlerConfig) RestResourceHandler {
+	validateRestResourceHandlerConfig(config)
+
+	return &restResourceHandler{
+		Config:     config,
+		HttpClient: httpClient,
+	}
+}
+
+func validateRestResourceHandlerConfig(config RestResourceHandlerConfig) {
+	if config.IsDataWrapped && config.DataPropertyName == "" {
+		panic("IsDataWrapped is set, but DataPropertyName has not been given.")
+	}
+
+	if !config.IsDataWrapped && config.DataPropertyName != "" {
+		panic("IsDataWrapped is not set, but DataPropertyName has been given.")
+	}
+
+	if !config.ResourceURL.IsAbs() {
+		panic("Resource URL must be absolute.")
+	}
+
+	if config.ResourceEncoding == "" {
+		panic("ResourceEncoding must be set.")
+	}
 }
 
 func (c *restResourceHandler) Fetch(id string, params map[string]string, res interface{}) error {
@@ -66,9 +99,10 @@ func (c *restResourceHandler) Create(resource interface{}, res interface{}) erro
 }
 
 func (c *restResourceHandler) request(params requestParams) error {
-	// TODO validate params - nil, etc
+	validateRequestParameters(params)
+
 	var id *string
-	if (!params.DoDiscardResourceId) {
+	if !params.DoDiscardResourceId {
 		id = &params.ResourceId
 	}
 	req, err := createRequest(c.Config, params.HttpMethod, id, params.QueryParams, params.Resource)
@@ -92,6 +126,9 @@ func (c *restResourceHandler) request(params requestParams) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != params.ExpectedStatus {
+		if c.Config.RemoteErrorExtractor == nil {
+			return defaultRemoteErrorExtractor(resp)
+		}
 		return c.Config.RemoteErrorExtractor(resp)
 	}
 
@@ -102,7 +139,27 @@ func (c *restResourceHandler) request(params requestParams) error {
 	return readResponse(c.Config, resp.Body, params.Response)
 }
 
-func createRequest(config restResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
+func validateRequestParameters(params requestParams) {
+	if !params.DoDiscardResourceId && params.ResourceId == "" {
+		panic("Invalid request parameters: ResourceId is empty, but DoDiscardResourceId is not set.")
+	}
+
+	if !params.DoDiscardContent && params.Response == nil {
+		panic("Invalid request parameters: Response is null, but DoDiscardContent is not set.")
+	}
+
+	switch params.HttpMethod {
+	case "GET", "POST", "DELETE":
+	default:
+		panic(fmt.Sprintf(`Unknown HTTP method "%s".`, params.HttpMethod))
+	}
+}
+
+func defaultRemoteErrorExtractor(response *http.Response) error {
+	return fmt.Errorf(`remote server returned error status: %d"`, response.StatusCode)
+}
+
+func createRequest(config RestResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
 	var err error
 
 	// copy base url
@@ -131,7 +188,7 @@ func createRequest(config restResourceHandlerConfig, method string, id *string, 
 	return http.NewRequest(method, u.String(), body)
 }
 
-func readResponse(config restResourceHandlerConfig, reader io.Reader, response interface{}) error {
+func readResponse(config RestResourceHandlerConfig, reader io.Reader, response interface{}) error {
 	respPayload, err := ioutil.ReadAll(reader)
 
 	if err != nil {
@@ -152,7 +209,7 @@ func readResponse(config restResourceHandlerConfig, reader io.Reader, response i
 	return json.Unmarshal(responseMap[config.DataPropertyName], &response)
 }
 
-func readerForResource(config restResourceHandlerConfig, resource interface{}) (io.Reader, error) {
+func readerForResource(config RestResourceHandlerConfig, resource interface{}) (io.Reader, error) {
 	payload, err := json.Marshal(resource)
 
 	if err != nil {
