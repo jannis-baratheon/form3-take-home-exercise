@@ -37,6 +37,10 @@ var _ = Describe("RestResourceHandler", func() {
 		client = restresourcehandler.NewRestResourceHandler(httpClient, config)
 	})
 
+	AfterEach(func() {
+		server.Close()
+	})
+
 	It("should fetch resource", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
@@ -79,9 +83,5 @@ var _ = Describe("RestResourceHandler", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(actualResponse).To(Equal(expectedResponse))
-	})
-
-	AfterEach(func() {
-		server.Close()
 	})
 })

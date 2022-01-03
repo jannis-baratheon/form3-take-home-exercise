@@ -33,37 +33,63 @@ type errorDTO struct {
 	ErrorMessage string `json:"error_message"`
 }
 
+type requestParams struct {
+	HttpMethod          string
+	ExpectedStatus      int
+	DoDiscardContent    bool
+	DoDiscardResourceId bool
+	ResourceId          string
+	QueryParams         map[string]string
+	Resource            interface{}
+	Response            interface{}
+}
+
 func (c *restResourceHandler) Fetch(id string, params map[string]string, res interface{}) error {
-	return c.request("GET", http.StatusOK, false, &id, nil, params, res)
+	return c.request(requestParams{
+		HttpMethod:     "GET",
+		ResourceId:     id,
+		QueryParams:    params,
+		Response:       res,
+		ExpectedStatus: http.StatusOK})
 }
 
 func (c *restResourceHandler) Delete(id string, params map[string]string) error {
-	return c.request("DELETE", http.StatusNoContent, true, &id, nil, params, nil)
+	return c.request(requestParams{
+		HttpMethod:       "DELETE",
+		ResourceId:       id,
+		QueryParams:      params,
+		DoDiscardContent: true,
+		ExpectedStatus:   http.StatusNoContent})
 }
 
 func (c *restResourceHandler) Create(resource interface{}, res interface{}) error {
-	return c.request("POST", http.StatusCreated, false, nil, resource, nil, res)
+	return c.request(requestParams{
+		HttpMethod:          "POST",
+		DoDiscardResourceId: true,
+		Resource:            resource,
+		Response:            res,
+		ExpectedStatus:      http.StatusCreated})
 }
 
-func (c *restResourceHandler) request(method string, expectedStatus int, discardContent bool, id *string, resource interface{}, params map[string]string, res interface{}) error {
+func (c *restResourceHandler) request(params requestParams) error {
 	// copy base url
 	u := c.Config.ResourceURL
 	// append id
-	if id != nil {
-		u.Path = path.Join(u.Path, *id)
+	if !params.DoDiscardResourceId {
+		u.Path = path.Join(u.Path, params.ResourceId)
 	}
 
-	if params != nil {
+	if params.QueryParams != nil {
 		query := u.Query()
-		for key, val := range params {
+		for key, val := range params.QueryParams {
 			query.Add(key, val)
 		}
 		u.RawQuery = query.Encode()
 	}
 
 	var body io.Reader
-	if resource != nil {
-		payload, err := json.Marshal(resource)
+	if params.Resource != nil {
+		payload, err := json.Marshal(params.Resource)
 
 		if err != nil {
 			return err
@@ -79,7 +105,7 @@ func (c *restResourceHandler) request(method string, expectedStatus int, discard
 
 		body = bytes.NewReader(payload)
 	}
-	req, err := http.NewRequest(method, u.String(), body)
+	req, err := http.NewRequest(params.HttpMethod, u.String(), body)
 
 	if err != nil {
 		return err
@@ -94,7 +120,7 @@ func (c *restResourceHandler) request(method string, expectedStatus int, discard
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != expectedStatus {
+	if resp.StatusCode != params.ExpectedStatus {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return err
@@ -110,7 +136,7 @@ func (c *restResourceHandler) request(method string, expectedStatus int, discard
 		return fmt.Errorf(`remote returned error status: %d, message: "%s"`, resp.StatusCode, errRespJson.ErrorMessage)
 	}
 
-	if discardContent {
+	if params.DoDiscardContent {
 		return nil
 	}
 
@@ -121,7 +147,7 @@ func (c *restResourceHandler) request(method string, expectedStatus int, discard
 	}
 
 	if !c.Config.IsDataWrapped {
-		return json.Unmarshal(respPayload, &res)
+		return json.Unmarshal(respPayload, &params.Response)
 	}
 
 	var responseMap map[string]json.RawMessage
@@ -131,5 +157,5 @@ func (c *restResourceHandler) request(method string, expectedStatus int, discard
 		return err
 	}
 
-	return json.Unmarshal(responseMap[c.Config.DataPropertyName], &res)
+	return json.Unmarshal(responseMap[c.Config.DataPropertyName], &params.Response)
 }
