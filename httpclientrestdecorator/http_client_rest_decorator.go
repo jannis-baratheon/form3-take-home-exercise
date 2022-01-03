@@ -1,9 +1,9 @@
 package httpclientrestdecorator
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"path"
@@ -43,7 +43,7 @@ func (c *genericRestClient) Fetch(resourcePath string, id string, res interface{
 	// copy base url
 	u := c.config.BaseApiUrl
 	// join base url and relative resource url
-	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/%s", resourcePath, id)) 
+	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/%s", resourcePath, id))
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {

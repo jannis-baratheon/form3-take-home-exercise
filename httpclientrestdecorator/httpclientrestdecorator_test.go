@@ -1,13 +1,13 @@
 package httpclientrestdecorator_test
 
 import (
+	"fmt"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/httpclientrestdecorator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/httpclientrestdecorator"
-	"net/url"
 	"net/http"
-	"fmt"
+	"net/url"
 )
 
 type person struct {
