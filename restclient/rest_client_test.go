@@ -1,8 +1,8 @@
-package httpclientrestdecorator_test
+package restclient_test
 
 import (
 	"fmt"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/httpclientrestdecorator"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restclient"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
@@ -16,12 +16,14 @@ type person struct {
 
 var _ = Describe("GenericRestClient", func() {
 	var server *ghttp.Server
-	var client httpclientrestdecorator.GenericRestClient
+	var httpClient *http.Client
+	var client restclient.RestClient
 
 	BeforeEach(func() {
+		httpClient = &http.Client{}
 		server = ghttp.NewServer()
 		url, _ := url.Parse(fmt.Sprintf("%s/api", server.URL()))
-		client = httpclientrestdecorator.CreateGenericRestClient(httpclientrestdecorator.GenericRestClientConfig{BaseApiUrl: *url})
+		client = restclient.CreateRestClient(*url, httpClient)
 	})
 
 	It("should fetch resource", func() {

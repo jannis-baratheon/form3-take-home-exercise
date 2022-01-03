@@ -1,4 +1,4 @@
-package httpclientrestdecorator
+package restclient
 
 import (
 	"encoding/json"
@@ -9,25 +9,21 @@ import (
 	"path"
 )
 
-type GenericRestClient interface {
+type RestClient interface {
 	Fetch(resourcePath string, id string, res interface{}) error
 	// Delete(resourcePath string, id string) (*string, error)
 	// Create(resourcePath string, json string) (*string, error)
 }
 
-type GenericRestClientConfig struct {
-	BaseApiUrl url.URL
-}
-
-type genericRestClient struct {
+type restClient struct {
 	httpClient *http.Client
-	config     GenericRestClientConfig
+	baseApiUrl url.URL
 }
 
-func CreateGenericRestClient(config GenericRestClientConfig) GenericRestClient {
-	return &genericRestClient{
-		httpClient: &http.Client{},
-		config:     config,
+func CreateRestClient(baseApiUrl url.URL, httpClient *http.Client) RestClient {
+	return &restClient{
+		baseApiUrl: baseApiUrl,
+		httpClient: httpClient,
 	}
 }
 
@@ -39,9 +35,9 @@ type dataWrapperDTO struct {
 	WrappedJSON json.RawMessage `json:"data"`
 }
 
-func (c *genericRestClient) Fetch(resourcePath string, id string, res interface{}) error {
+func (c *restClient) Fetch(resourcePath string, id string, res interface{}) error {
 	// copy base url
-	u := c.config.BaseApiUrl
+	u := c.baseApiUrl
 	// join base url and relative resource url
 	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/%s", resourcePath, id))
 
