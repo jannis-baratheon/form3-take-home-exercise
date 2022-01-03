@@ -3,7 +3,6 @@ package restresourcehandler
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,11 +25,6 @@ func NewRestResourceHandler(httpClient *http.Client, config restResourceHandlerC
 		Config:     config,
 		HttpClient: httpClient,
 	}
-}
-
-// TODO parameterized
-type errorDTO struct {
-	ErrorMessage string `json:"error_message"`
 }
 
 type requestParams struct {
@@ -72,6 +66,8 @@ func (c *restResourceHandler) Create(resource interface{}, res interface{}) erro
 }
 
 func (c *restResourceHandler) request(params requestParams) error {
+	var err error
+
 	// copy base url
 	u := c.Config.ResourceURL
 	// append id
@@ -89,21 +85,10 @@ func (c *restResourceHandler) request(params requestParams) error {
 
 	var body io.Reader
 	if params.Resource != nil {
-		payload, err := json.Marshal(params.Resource)
-
+		body, err = readerForResource(c.Config, params.Resource)
 		if err != nil {
 			return err
 		}
-
-		if c.Config.IsDataWrapped {
-			payload, err = json.Marshal(map[string]json.RawMessage{"data": payload})
-		}
-
-		if err != nil {
-			return err
-		}
-
-		body = bytes.NewReader(payload)
 	}
 	req, err := http.NewRequest(params.HttpMethod, u.String(), body)
 
@@ -121,33 +106,25 @@ func (c *restResourceHandler) request(params requestParams) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != params.ExpectedStatus {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		var errRespJson errorDTO
-		err = json.Unmarshal(body, &errRespJson)
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf(`remote returned error status: %d, message: "%s"`, resp.StatusCode, errRespJson.ErrorMessage)
+		return c.Config.RemoteErrorExtractor(resp)
 	}
 
 	if params.DoDiscardContent {
 		return nil
 	}
 
-	respPayload, err := ioutil.ReadAll(resp.Body)
+	return readResponse(c.Config, resp.Body, params.Response)
+}
+
+func readResponse(config restResourceHandlerConfig, reader io.Reader, response interface{}) error {
+	respPayload, err := ioutil.ReadAll(reader)
 
 	if err != nil {
 		return err
 	}
 
-	if !c.Config.IsDataWrapped {
-		return json.Unmarshal(respPayload, &params.Response)
+	if !config.IsDataWrapped {
+		return json.Unmarshal(respPayload, &response)
 	}
 
 	var responseMap map[string]json.RawMessage
@@ -157,5 +134,23 @@ func (c *restResourceHandler) request(params requestParams) error {
 		return err
 	}
 
-	return json.Unmarshal(responseMap[c.Config.DataPropertyName], &params.Response)
+	return json.Unmarshal(responseMap[config.DataPropertyName], &response)
+}
+
+func readerForResource(config restResourceHandlerConfig, resource interface{}) (io.Reader, error) {
+	payload, err := json.Marshal(resource)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if config.IsDataWrapped {
+		payload, err = json.Marshal(map[string]json.RawMessage{"data": payload})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(payload), nil
 }
