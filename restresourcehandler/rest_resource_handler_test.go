@@ -18,6 +18,22 @@ type wrapper struct {
 	Data person `json:"data"`
 }
 
+type request func(client restresourcehandler.RestResourceHandler) error
+
+var exampleValidRequests = map[string]request {
+	"fetch": func (client restresourcehandler.RestResourceHandler) error {
+		var response person
+		return client.Fetch("1", map[string]string{"attrs": "name"}, &response)
+	},
+	"delete": func (client restresourcehandler.RestResourceHandler) error {
+		return client.Delete("1", map[string]string{"version": "1"})
+	},
+	"create": func (client restresourcehandler.RestResourceHandler) error {
+		var actualResponse person
+		return client.Create(person{"Smith"}, &actualResponse)
+	},
+}
+
 var _ = Describe("RestResourceHandler", func() {
 	var server *ghttp.Server
 	var httpClient *http.Client
@@ -29,10 +45,10 @@ var _ = Describe("RestResourceHandler", func() {
 		server = ghttp.NewServer()
 		url, _ := url.Parse(fmt.Sprintf("%s/api/people", server.URL()))
 		config := restresourcehandler.RestResourceHandlerConfig{
-			IsDataWrapped: true,
+			IsDataWrapped:    true,
 			DataPropertyName: "data",
 			ResourceEncoding: resourceEncoding,
-			ResourceURL: *url,
+			ResourceURL:      *url,
 		}
 		client = restresourcehandler.NewRestResourceHandler(httpClient, config)
 	})
@@ -51,7 +67,7 @@ var _ = Describe("RestResourceHandler", func() {
 		var response person
 		err := client.Fetch("1", map[string]string{"attrs": "name"}, &response)
 
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err).To(Succeed())
 		Expect(response).To(Equal(person{"Smith"}))
 	})
 
@@ -84,4 +100,16 @@ var _ = Describe("RestResourceHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(actualResponse).To(Equal(expectedResponse))
 	})
+
+	for reqName, req := range exampleValidRequests {
+		It(fmt.Sprintf("should report remote error during %s", reqName), func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.RespondWith(http.StatusInternalServerError, nil)))
+
+			err := req(client)
+
+			Expect(err).To(MatchError(fmt.Errorf("remote server returned error status: 500")))
+		})
+	}
 })

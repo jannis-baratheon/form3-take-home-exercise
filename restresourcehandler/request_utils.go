@@ -11,7 +11,7 @@ import (
 )
 
 func defaultRemoteErrorExtractor(response *http.Response) error {
-	return fmt.Errorf(`remote server returned error status: %d"`, response.StatusCode)
+	return fmt.Errorf(`remote server returned error status: %d`, response.StatusCode)
 }
 
 func createRequest(config RestResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {

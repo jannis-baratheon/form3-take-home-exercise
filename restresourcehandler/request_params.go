@@ -2,6 +2,7 @@ package restresourcehandler
 
 import (
 	"fmt"
+	"net/http"
 )
 
 type requestParams struct {
@@ -25,7 +26,7 @@ func validateRequestParameters(params requestParams) {
 	}
 
 	switch params.HttpMethod {
-	case "GET", "POST", "DELETE":
+	case http.MethodGet, http.MethodDelete, http.MethodPost:
 	default:
 		panic(fmt.Sprintf(`Unknown HTTP method "%s".`, params.HttpMethod))
 	}

@@ -28,7 +28,7 @@ func NewRestResourceHandler(httpClient *http.Client, config RestResourceHandlerC
 
 func (c *restResourceHandler) Fetch(id string, params map[string]string, res interface{}) error {
 	return c.request(requestParams{
-		HttpMethod:     "GET",
+		HttpMethod:     http.MethodGet,
 		ResourceId:     id,
 		QueryParams:    params,
 		Response:       res,
@@ -37,7 +37,7 @@ func (c *restResourceHandler) Fetch(id string, params map[string]string, res int
 
 func (c *restResourceHandler) Delete(id string, params map[string]string) error {
 	return c.request(requestParams{
-		HttpMethod:       "DELETE",
+		HttpMethod:       http.MethodDelete,
 		ResourceId:       id,
 		QueryParams:      params,
 		DoDiscardContent: true,
@@ -46,7 +46,7 @@ func (c *restResourceHandler) Delete(id string, params map[string]string) error 
 
 func (c *restResourceHandler) Create(resource interface{}, res interface{}) error {
 	return c.request(requestParams{
-		HttpMethod:          "POST",
+		HttpMethod:          http.MethodPost,
 		DoDiscardResourceId: true,
 		Resource:            resource,
 		Response:            res,
