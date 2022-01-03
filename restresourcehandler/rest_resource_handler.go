@@ -66,31 +66,11 @@ func (c *restResourceHandler) Create(resource interface{}, res interface{}) erro
 }
 
 func (c *restResourceHandler) request(params requestParams) error {
-	var err error
-
-	// copy base url
-	u := c.Config.ResourceURL
-	// append id
-	if !params.DoDiscardResourceId {
-		u.Path = path.Join(u.Path, params.ResourceId)
+	var id *string
+	if (!params.DoDiscardResourceId) {
+		id = &params.ResourceId
 	}
-
-	if params.QueryParams != nil {
-		query := u.Query()
-		for key, val := range params.QueryParams {
-			query.Add(key, val)
-		}
-		u.RawQuery = query.Encode()
-	}
-
-	var body io.Reader
-	if params.Resource != nil {
-		body, err = readerForResource(c.Config, params.Resource)
-		if err != nil {
-			return err
-		}
-	}
-	req, err := http.NewRequest(params.HttpMethod, u.String(), body)
+	req, err := createRequest(c.Config, params.HttpMethod, id, params.QueryParams, params.Resource)
 
 	if err != nil {
 		return err
@@ -114,6 +94,35 @@ func (c *restResourceHandler) request(params requestParams) error {
 	}
 
 	return readResponse(c.Config, resp.Body, params.Response)
+}
+
+func createRequest(config restResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
+	var err error
+
+	// copy base url
+	u := config.ResourceURL
+	// append id
+	if id != nil {
+		u.Path = path.Join(u.Path, *id)
+	}
+
+	if queryParams != nil {
+		query := u.Query()
+		for key, val := range queryParams {
+			query.Add(key, val)
+		}
+		u.RawQuery = query.Encode()
+	}
+
+	var body io.Reader
+	if resource != nil {
+		body, err = readerForResource(config, resource)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return http.NewRequest(method, u.String(), body)
 }
 
 func readResponse(config restResourceHandlerConfig, reader io.Reader, response interface{}) error {
