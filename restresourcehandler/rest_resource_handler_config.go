@@ -69,9 +69,7 @@ func (b *restResourceHandlerConfigBuilder) Build() restResourceHandlerConfig {
 
 	extractor := b.RemoteErrorExtractor 
 	if extractor == nil {
-		extractor = func(response *http.Response) error {
-			return fmt.Errorf(`remote server returned error status: %d"`, response.StatusCode)
-		}
+		extractor = defaultRemoteErrorExtractor
 	}
 
 	return restResourceHandlerConfig{
@@ -81,6 +79,10 @@ func (b *restResourceHandlerConfigBuilder) Build() restResourceHandlerConfig {
 		DataPropertyName:     dataPropertyName,
 		IsDataWrapped:        b.DataPropertyName != nil,
 	}
+}
+
+func defaultRemoteErrorExtractor(response *http.Response) error {
+	return fmt.Errorf(`remote server returned error status: %d"`, response.StatusCode)
 }
 
 func requireNonNil(property string, v interface{}) {
