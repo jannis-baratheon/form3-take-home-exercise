@@ -1,30 +1,30 @@
 package restclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"path"
 )
 
 type RestClient interface {
-	Fetch(resourcePath string, id string, params map[string]string, res interface{}, dataPropertyName string) error
-	Delete(resourcePath string, id string, params map[string]string) error
-	// Create(resourcePath string, json string) (*string, error)
+	Fetch(id string, params map[string]string, res interface{}) error
+	Delete(id string, params map[string]string) error
+	Create(resource interface{}, res interface{}) error
 }
 
 type restClient struct {
-	httpClient *http.Client
-	baseApiUrl url.URL
+	HttpClient *http.Client
+	Config     restClientConfig
 }
 
-// TODO max response size
-func CreateRestClient(baseApiUrl url.URL, httpClient *http.Client) RestClient {
+func CreateRestClient(httpClient *http.Client, config restClientConfig) RestClient {
 	return &restClient{
-		baseApiUrl: baseApiUrl,
-		httpClient: httpClient,
+		Config:     config,
+		HttpClient: httpClient,
 	}
 }
 
@@ -33,79 +33,103 @@ type errorDTO struct {
 	ErrorMessage string `json:"error_message"`
 }
 
-func (c *restClient) Fetch(resourcePath string, id string, params map[string]string, res interface{}, dataPropertyName string) error {
-	content, err := c.request("GET", http.StatusOK, false, resourcePath, id, params)
-	
-	if err != nil {
-		return err
-	}
-
-	var responseMap map[string]json.RawMessage
-	err = json.Unmarshal(*content, &responseMap)
-
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(responseMap[dataPropertyName], &res)
-
-	return err
+func (c *restClient) Fetch(id string, params map[string]string, res interface{}) error {
+	return c.request("GET", http.StatusOK, false, &id, nil, params, res)
 }
 
-func (c *restClient) Delete(resourcePath string, id string, params map[string]string) error {
-	_, err := c.request("DELETE", http.StatusNoContent, true, resourcePath, id, params)
-
-	return err
+func (c *restClient) Delete(id string, params map[string]string) error {
+	return c.request("DELETE", http.StatusNoContent, true, &id, nil, params, nil)
 }
 
-func (c *restClient) request(method string, expectedStatus int, discardContent bool, resourcePath string, id string, params map[string]string) (*[]byte, error) {
+func (c *restClient) Create(resource interface{}, res interface{}) error {
+	return c.request("POST", http.StatusCreated, false, nil, resource, nil, res)
+}
+
+func (c *restClient) request(method string, expectedStatus int, discardContent bool, id *string, resource interface{}, params map[string]string, res interface{}) error {
 	// copy base url
-	u := c.baseApiUrl
-	// join base url and relative resource url
-	u.Path = path.Join(u.Path, fmt.Sprintf("/%s/%s", resourcePath, id))
-
-	query := u.Query()
-	for key, val := range params {
-		query.Add(key, val)
-	}
-	u.RawQuery = query.Encode()
-
-	req, err := http.NewRequest(method, u.String(), nil)
-	if err != nil {
-		return nil, err
+	u := c.Config.ResourceURL
+	// append id
+	if id != nil {
+		u.Path = path.Join(u.Path, *id)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	if params != nil {
+		query := u.Query()
+		for key, val := range params {
+			query.Add(key, val)
+		}
+		u.RawQuery = query.Encode()
+	}
+
+	var body io.Reader
+	if resource != nil {
+		payload, err := json.Marshal(resource)
+
+		if err != nil {
+			return err
+		}
+
+		if c.Config.IsDataWrapped {
+			payload, err = json.Marshal(map[string]json.RawMessage{"data": payload})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		body = bytes.NewReader(payload)
+	}
+	req, err := http.NewRequest(method, u.String(), body)
+
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	req.Header.Add("Content-Type", c.Config.ResourceEncoding)
+	req.Header.Add("Accept", c.Config.ResourceEncoding)
+
+	resp, err := c.HttpClient.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != expectedStatus {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		var errRespJson errorDTO
 		err = json.Unmarshal(body, &errRespJson)
 
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return nil, fmt.Errorf(errRespJson.ErrorMessage)
+		return fmt.Errorf(`remote returned error status: %d, message: "%s"`, resp.StatusCode, errRespJson.ErrorMessage)
 	}
 
 	if discardContent {
-		return nil, nil
+		return nil
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	
+	respPayload, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &body, nil
+	if !c.Config.IsDataWrapped {
+		return json.Unmarshal(respPayload, &res)
+	}
+
+	var responseMap map[string]json.RawMessage
+	err = json.Unmarshal(respPayload, &responseMap)
+
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(responseMap[c.Config.DataPropertyName], &res)
 }
