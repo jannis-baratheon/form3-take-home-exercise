@@ -1,8 +1,8 @@
-package restclient_test
+package restresourcehandler_test
 
 import (
 	"fmt"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restclient"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
@@ -18,29 +18,30 @@ type wrapper struct {
 	Data person `json:"data"`
 }
 
-var _ = Describe("GenericRestClient", func() {
+var _ = Describe("RestResourceHandler", func() {
 	var server *ghttp.Server
 	var httpClient *http.Client
-	var client restclient.RestClient
+	var client restresourcehandler.RestResourceHandler
+	const resourceEncoding = "application/json"
 
 	BeforeEach(func() {
 		httpClient = &http.Client{}
 		server = ghttp.NewServer()
 		url, _ := url.Parse(fmt.Sprintf("%s/api/people", server.URL()))
-		config := restclient.
-			NewRestClientConfigBuilder().
+		config := restresourcehandler.
+			NewConfigBuilder().
 			SetDataPropertyName("data").
-			SetResourceEncoding("application/json").
+			SetResourceEncoding(resourceEncoding).
 			SetResourceURL(*url).
 			Build()
-		client = restclient.CreateRestClient(httpClient, config)
+		client = restresourcehandler.NewRestResourceHandler(httpClient, config)
 	})
 
 	It("should fetch resource", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest("GET", "/api/people/1", "attrs=name"),
-				ghttp.VerifyHeaderKV("Accept", "application/json"),
+				ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 				ghttp.RespondWith(http.StatusOK, `{ "data": {"name": "Smith"} }`)))
 
 		var response person
@@ -53,7 +54,7 @@ var _ = Describe("GenericRestClient", func() {
 	It("should delete resource", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
-				ghttp.VerifyRequest("DELETE", "/api/people/1"),
+				ghttp.VerifyRequest("DELETE", "/api/people/1", "version=1"),
 				ghttp.RespondWith(http.StatusNoContent, nil)))
 
 		err := client.Delete("1", map[string]string{"version": "1"})
@@ -68,8 +69,8 @@ var _ = Describe("GenericRestClient", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest("POST", "/api/people"),
-				ghttp.VerifyMimeType("application/json"),
-				ghttp.VerifyHeaderKV("Accept", "application/json"),
+				ghttp.VerifyMimeType(resourceEncoding),
+				ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 				ghttp.VerifyJSONRepresenting(wrapper{payload}),
 				ghttp.RespondWithJSONEncoded(http.StatusCreated, wrapper{expectedResponse})))
 

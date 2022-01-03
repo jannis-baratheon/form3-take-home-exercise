@@ -1,4 +1,4 @@
-package restclient
+package restresourcehandler
 
 import (
 	"bytes"
@@ -10,19 +10,19 @@ import (
 	"path"
 )
 
-type RestClient interface {
+type RestResourceHandler interface {
 	Fetch(id string, params map[string]string, res interface{}) error
 	Delete(id string, params map[string]string) error
 	Create(resource interface{}, res interface{}) error
 }
 
-type restClient struct {
+type restResourceHandler struct {
 	HttpClient *http.Client
-	Config     restClientConfig
+	Config     restResourceHandlerConfig
 }
 
-func CreateRestClient(httpClient *http.Client, config restClientConfig) RestClient {
-	return &restClient{
+func NewRestResourceHandler(httpClient *http.Client, config restResourceHandlerConfig) RestResourceHandler {
+	return &restResourceHandler{
 		Config:     config,
 		HttpClient: httpClient,
 	}
@@ -33,19 +33,19 @@ type errorDTO struct {
 	ErrorMessage string `json:"error_message"`
 }
 
-func (c *restClient) Fetch(id string, params map[string]string, res interface{}) error {
+func (c *restResourceHandler) Fetch(id string, params map[string]string, res interface{}) error {
 	return c.request("GET", http.StatusOK, false, &id, nil, params, res)
 }
 
-func (c *restClient) Delete(id string, params map[string]string) error {
+func (c *restResourceHandler) Delete(id string, params map[string]string) error {
 	return c.request("DELETE", http.StatusNoContent, true, &id, nil, params, nil)
 }
 
-func (c *restClient) Create(resource interface{}, res interface{}) error {
+func (c *restResourceHandler) Create(resource interface{}, res interface{}) error {
 	return c.request("POST", http.StatusCreated, false, nil, resource, nil, res)
 }
 
-func (c *restClient) request(method string, expectedStatus int, discardContent bool, id *string, resource interface{}, params map[string]string, res interface{}) error {
+func (c *restResourceHandler) request(method string, expectedStatus int, discardContent bool, id *string, resource interface{}, params map[string]string, res interface{}) error {
 	// copy base url
 	u := c.Config.ResourceURL
 	// append id
