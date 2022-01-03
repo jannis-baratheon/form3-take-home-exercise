@@ -1,14 +1,7 @@
 package restresourcehandler
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"path"
 )
 
 type RemoteErrorExtractor func(response *http.Response) error
@@ -19,29 +12,9 @@ type RestResourceHandler interface {
 	Create(resource interface{}, res interface{}) error
 }
 
-// TODO maxresponsesize, errordeserializer
-type RestResourceHandlerConfig struct {
-	RemoteErrorExtractor RemoteErrorExtractor
-	ResourceURL          url.URL
-	ResourceEncoding     string
-	DataPropertyName     string
-	IsDataWrapped        bool
-}
-
 type restResourceHandler struct {
 	HttpClient *http.Client
 	Config     RestResourceHandlerConfig
-}
-
-type requestParams struct {
-	HttpMethod          string
-	ExpectedStatus      int
-	DoDiscardContent    bool
-	DoDiscardResourceId bool
-	ResourceId          string
-	QueryParams         map[string]string
-	Resource            interface{}
-	Response            interface{}
 }
 
 func NewRestResourceHandler(httpClient *http.Client, config RestResourceHandlerConfig) RestResourceHandler {
@@ -50,24 +23,6 @@ func NewRestResourceHandler(httpClient *http.Client, config RestResourceHandlerC
 	return &restResourceHandler{
 		Config:     config,
 		HttpClient: httpClient,
-	}
-}
-
-func validateRestResourceHandlerConfig(config RestResourceHandlerConfig) {
-	if config.IsDataWrapped && config.DataPropertyName == "" {
-		panic("IsDataWrapped is set, but DataPropertyName has not been given.")
-	}
-
-	if !config.IsDataWrapped && config.DataPropertyName != "" {
-		panic("IsDataWrapped is not set, but DataPropertyName has been given.")
-	}
-
-	if !config.ResourceURL.IsAbs() {
-		panic("Resource URL must be absolute.")
-	}
-
-	if config.ResourceEncoding == "" {
-		panic("ResourceEncoding must be set.")
 	}
 }
 
@@ -137,92 +92,4 @@ func (c *restResourceHandler) request(params requestParams) error {
 	}
 
 	return readResponse(c.Config, resp.Body, params.Response)
-}
-
-func validateRequestParameters(params requestParams) {
-	if !params.DoDiscardResourceId && params.ResourceId == "" {
-		panic("Invalid request parameters: ResourceId is empty, but DoDiscardResourceId is not set.")
-	}
-
-	if !params.DoDiscardContent && params.Response == nil {
-		panic("Invalid request parameters: Response is null, but DoDiscardContent is not set.")
-	}
-
-	switch params.HttpMethod {
-	case "GET", "POST", "DELETE":
-	default:
-		panic(fmt.Sprintf(`Unknown HTTP method "%s".`, params.HttpMethod))
-	}
-}
-
-func defaultRemoteErrorExtractor(response *http.Response) error {
-	return fmt.Errorf(`remote server returned error status: %d"`, response.StatusCode)
-}
-
-func createRequest(config RestResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
-	var err error
-
-	// copy base url
-	u := config.ResourceURL
-	// append id
-	if id != nil {
-		u.Path = path.Join(u.Path, *id)
-	}
-
-	if queryParams != nil {
-		query := u.Query()
-		for key, val := range queryParams {
-			query.Add(key, val)
-		}
-		u.RawQuery = query.Encode()
-	}
-
-	var body io.Reader
-	if resource != nil {
-		body, err = readerForResource(config, resource)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return http.NewRequest(method, u.String(), body)
-}
-
-func readResponse(config RestResourceHandlerConfig, reader io.Reader, response interface{}) error {
-	respPayload, err := ioutil.ReadAll(reader)
-
-	if err != nil {
-		return err
-	}
-
-	if !config.IsDataWrapped {
-		return json.Unmarshal(respPayload, &response)
-	}
-
-	var responseMap map[string]json.RawMessage
-	err = json.Unmarshal(respPayload, &responseMap)
-
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(responseMap[config.DataPropertyName], &response)
-}
-
-func readerForResource(config RestResourceHandlerConfig, resource interface{}) (io.Reader, error) {
-	payload, err := json.Marshal(resource)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if config.IsDataWrapped {
-		payload, err = json.Marshal(map[string]json.RawMessage{"data": payload})
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewReader(payload), nil
 }
