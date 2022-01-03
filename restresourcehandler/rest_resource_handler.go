@@ -66,6 +66,7 @@ func (c *restResourceHandler) Create(resource interface{}, res interface{}) erro
 }
 
 func (c *restResourceHandler) request(params requestParams) error {
+	// TODO validate params - nil, etc
 	var id *string
 	if (!params.DoDiscardResourceId) {
 		id = &params.ResourceId
@@ -76,8 +77,13 @@ func (c *restResourceHandler) request(params requestParams) error {
 		return err
 	}
 
-	req.Header.Add("Content-Type", c.Config.ResourceEncoding)
-	req.Header.Add("Accept", c.Config.ResourceEncoding)
+	if !params.DoDiscardContent {
+		req.Header.Add("Accept", c.Config.ResourceEncoding)
+	}
+
+	if params.Resource != nil {
+		req.Header.Add("Content-Type", c.Config.ResourceEncoding)
+	}
 
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
