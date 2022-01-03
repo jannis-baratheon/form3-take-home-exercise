@@ -1,4 +1,4 @@
-package form3apiclient
+package httpclientrestdecorator
 
 import (
 	"fmt"

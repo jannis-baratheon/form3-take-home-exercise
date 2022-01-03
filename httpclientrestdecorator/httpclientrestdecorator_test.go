@@ -1,10 +1,10 @@
-package form3apiclient_test
+package httpclientrestdecorator_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/genericrestclient"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/httpclientrestdecorator"
 	"net/url"
 	"net/http"
 	"fmt"
@@ -16,12 +16,12 @@ type person struct {
 
 var _ = Describe("GenericRestClient", func() {
 	var server *ghttp.Server
-	var client form3apiclient.GenericRestClient
+	var client httpclientrestdecorator.GenericRestClient
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 		url, _ := url.Parse(fmt.Sprintf("%s/api", server.URL()))
-		client = form3apiclient.CreateGenericRestClient(form3apiclient.GenericRestClientConfig{BaseApiUrl: *url})
+		client = httpclientrestdecorator.CreateGenericRestClient(httpclientrestdecorator.GenericRestClientConfig{BaseApiUrl: *url})
 	})
 
 	It("should fetch resource", func() {
