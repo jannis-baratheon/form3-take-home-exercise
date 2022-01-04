@@ -206,7 +206,7 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
+			It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
