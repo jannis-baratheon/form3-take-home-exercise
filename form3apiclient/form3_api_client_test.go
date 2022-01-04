@@ -15,14 +15,17 @@ type wrapper struct {
 	AccountData form3apiclient.AccountData `json:"data"`
 }
 
+const someValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+const someOtherValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+
 type remoteError struct {
 	Message string `json:"error_message"`
 }
 
-func minimalValidAccountData() form3apiclient.AccountData {
+func someValidAccountData(id string) form3apiclient.AccountData {
 	return form3apiclient.AccountData{
-		ID:             uuid.NewString(),
-		OrganisationID: uuid.NewString(),
+		ID:             id,
+		OrganisationID: someValidUuid,
 		Type:           "accounts",
 		Attributes: form3apiclient.AccountAttributes{
 			AccountClassification: "Personal",
@@ -36,10 +39,10 @@ type apiCall func(client form3apiclient.Form3ApiClient) (interface{}, error)
 
 var exampleValidApiCalls = map[string]apiCall{
 	"accounts get": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(uuid.NewString())
+		return client.Accounts().Get(someValidUuid)
 	},
 	"accounts delete": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(uuid.NewString())
+		return client.Accounts().Get(someValidUuid)
 	},
 	"accounts create": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
 		return client.Accounts().Create(form3apiclient.AccountData{})
@@ -78,8 +81,8 @@ var _ = Describe("Form3ApiClient", func() {
 			client = form3apiclient.NewForm3APIClient(apiUrl, httpClient)
 		})
 
-		It("should fetch account", func() {
-			expectedData := minimalValidAccountData()
+		It("gets account", func() {
+			expectedData := someValidAccountData(someValidUuid)
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -93,8 +96,8 @@ var _ = Describe("Form3ApiClient", func() {
 			Expect(response).To(Equal(expectedData))
 		})
 
-		It("should delete account", func() {
-			accountId := uuid.NewString()
+		It("deletes account", func() {
+			accountId := someValidUuid
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -106,9 +109,9 @@ var _ = Describe("Form3ApiClient", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should create account", func() {
-			requestData := minimalValidAccountData()
-			expectedData := minimalValidAccountData()
+		It("creates account", func() {
+			requestData := someValidAccountData(someValidUuid)
+			expectedData := someValidAccountData(someOtherValidUuid)
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -129,7 +132,7 @@ var _ = Describe("Form3ApiClient", func() {
 				expectedErrorStatus := http.StatusBadRequest
 				expectedRemoteErrorMessage := "i have no idea what language you speak"
 
-				It(fmt.Sprintf(`should include server message in error if available for "%s" call`, callName), func() {
+				It(fmt.Sprintf(`includes server message in error if available for "%s" call`, callName), func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWithJSONEncoded(expectedErrorStatus, remoteError{expectedRemoteErrorMessage})))
@@ -150,7 +153,7 @@ var _ = Describe("Form3ApiClient", func() {
 			forEachExampleValidApiCall(func(callName string, call apiCall) {
 				expectedErrorStatus := http.StatusBadRequest
 
-				It(fmt.Sprintf(`should not include server message in error if unavailable for "%s" call`, callName), func() {
+				It(fmt.Sprintf(`does not include server message in error if unavailable for "%s" call`, callName), func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWith(expectedErrorStatus, nil)))
