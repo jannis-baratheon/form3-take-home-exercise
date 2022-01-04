@@ -1,5 +1,11 @@
 package form3apiclient
 
+import (
+	"fmt"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
+	"net/http"
+)
+
 // Account represents an account in the form3 org section.
 // See https://api-docs.form3.tech/api.html#organisation-accounts for
 // more information about fields.
@@ -27,4 +33,44 @@ type AccountAttributes struct {
 	SecondaryIdentification string   `json:"secondary_identification,omitempty"`
 	Status                  string   `json:"status,omitempty"`
 	Switched                bool     `json:"switched,omitempty"`
+}
+
+type Accounts interface {
+	Get(id string) (AccountData, error)
+	Delete(id string, version int) error
+	Create(accountData AccountData) (AccountData, error)
+}
+
+type accounts struct {
+	Handler restresourcehandler.RestResourceHandler
+}
+
+const resourcePath = "organisation/accounts"
+
+func newAccounts(apiUrl string, httpClient *http.Client) (Accounts, error) {
+	accountsResourceUrl, err := join(apiUrl, resourcePath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	handler := restresourcehandler.NewRestResourceHandler(httpClient, accountsResourceUrl, config)
+
+	return &accounts{handler}, nil
+}
+
+func (a *accounts) Get(id string) (AccountData, error) {
+	var accountData AccountData
+	err := a.Handler.Fetch(id, nil, &accountData)
+	return accountData, err
+}
+
+func (a *accounts) Delete(id string, version int) error {
+	return a.Handler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
+}
+
+func (a *accounts) Create(accountData AccountData) (AccountData, error) {
+	var response AccountData
+	err := a.Handler.Create(&accountData, &response)
+	return response, err
 }

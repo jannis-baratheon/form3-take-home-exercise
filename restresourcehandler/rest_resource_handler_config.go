@@ -1,6 +1,5 @@
 package restresourcehandler
 
-// TODO maxresponsesize, errordeserializer
 type RestResourceHandlerConfig struct {
 	RemoteErrorExtractor RemoteErrorExtractor
 	ResourceEncoding     string

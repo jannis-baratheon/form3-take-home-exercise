@@ -6,22 +6,18 @@ import (
 	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"path"
 )
 
 type form3APIRemoteError struct {
-	ErrorMessage string `json:"error_message,omitempty"`
+	ErrorMessage string `json:"error_message"`
 }
 
 type Form3ApiClient interface {
-	CreateAccount(accountData AccountData) (AccountData, error)
-	GetAccount(id string) (AccountData, error)
-	DeleteAccount(id string, version int) error
+	Accounts() Accounts
 }
 
 type form3ApiClient struct {
-	AccountHandler restresourcehandler.RestResourceHandler
+	AccountsEndpoint Accounts
 }
 
 var config = restresourcehandler.RestResourceHandlerConfig{
@@ -34,7 +30,10 @@ var config = restresourcehandler.RestResourceHandlerConfig{
 func extractRemoteError(response *http.Response) error {
 	respPayload, err := ioutil.ReadAll(response.Body)
 	if response.ContentLength == 0 {
-		return fmt.Errorf(`api responded with error: http status code %d, http status "%s"`, response.StatusCode, response.Status)
+		return fmt.Errorf(
+			`api responded with error: http status code %d, http status "%s"`,
+			response.StatusCode,
+			response.Status)
 	}
 
 	if err != nil {
@@ -48,39 +47,23 @@ func extractRemoteError(response *http.Response) error {
 		return err
 	}
 
-	return fmt.Errorf(`api responded with error: http status code %d, http status "%s", server message: "%s"`, response.StatusCode, response.Status, remoteError.ErrorMessage)
+	return fmt.Errorf(
+		`api responded with error: http status code %d, http status "%s", server message: "%s"`,
+		response.StatusCode,
+		response.Status,
+		remoteError.ErrorMessage)
 }
 
-func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
-	url, err := url.Parse(apiURL)
+func NewForm3APIClient(apiUrl string, httpClient *http.Client) Form3ApiClient {
+	accounts, err := newAccounts(apiUrl, httpClient)
 
 	if err != nil {
 		panic(err)
 	}
 
-	if !url.IsAbs() {
-		panic(fmt.Errorf("api url must be absolute"))
-	}
-
-	url.Path = path.Join(url.Path, "organisation/accounts")
-
-	accountHandler := restresourcehandler.NewRestResourceHandler(httpClient, url.String(), config)
-
-	return &form3ApiClient{AccountHandler: accountHandler}
+	return &form3ApiClient{AccountsEndpoint: accounts}
 }
 
-func (c *form3ApiClient) GetAccount(id string) (AccountData, error) {
-	var accountData AccountData
-	err := c.AccountHandler.Fetch(id, nil, &accountData)
-	return accountData, err
-}
-
-func (c *form3ApiClient) DeleteAccount(id string, version int) error {
-	return c.AccountHandler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
-}
-
-func (c *form3ApiClient) CreateAccount(accountData AccountData) (AccountData, error) {
-	var response AccountData
-	err := c.AccountHandler.Create(&accountData, &response)
-	return response, err
+func (c *form3ApiClient) Accounts() Accounts {
+	return c.AccountsEndpoint
 }

@@ -23,9 +23,9 @@ type apiError struct {
 	ErrorMessage string `json:"error_message"`
 }
 
-type request func(client restresourcehandler.RestResourceHandler) error
+type apiCall func(client restresourcehandler.RestResourceHandler) error
 
-var exampleValidRequests = map[string]request{
+var exampleValidApiCalls = map[string]apiCall{
 	"fetch": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
 		return client.Fetch("1", map[string]string{"attrs": "name"}, &response)
@@ -39,9 +39,9 @@ var exampleValidRequests = map[string]request{
 	},
 }
 
-func forEachExampleValidRequest(consumer func(string, request)) {
-	for reqName, req := range exampleValidRequests {
-		consumer(reqName, req)
+func forEachExampleValidApiCall(consumer func(string, apiCall)) {
+	for callName, call := range exampleValidApiCalls {
+		consumer(callName, call)
 	}
 }
 
@@ -139,7 +139,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
-		forEachExampleValidRequest(func(reqName string, req request) {
+		forEachExampleValidApiCall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf("should report default remote error during %s", reqName), func() {
 				err := req(client)
 
@@ -167,7 +167,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
-		forEachExampleValidRequest(func(reqName string, req request) {
+		forEachExampleValidApiCall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
 				err := req(client)
 
@@ -207,7 +207,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
 		})
 
-		forEachExampleValidRequest(func(reqName string, req request) {
+		forEachExampleValidApiCall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
 				err := req(client)
 

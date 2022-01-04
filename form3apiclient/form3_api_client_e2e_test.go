@@ -9,7 +9,7 @@ import (
 )
 
 func TestAPICLient(t *testing.T) {
-	client := form3apiclient.NewForm3APIClient("http://localhost:8080/v1", &http.Client{})
+	accounts := form3apiclient.NewForm3APIClient("http://localhost:8080/v1", &http.Client{}).Accounts()
 
 	accountData := form3apiclient.AccountData{
 		ID:             uuid.NewString(),
@@ -22,7 +22,7 @@ func TestAPICLient(t *testing.T) {
 		},
 	}
 	var response form3apiclient.AccountData
-	response, err := client.CreateAccount(accountData)
+	response, err := accounts.Create(accountData)
 
 	fmt.Printf("\nCREATE ***************\n\nerror: %v\n\nresponse: %v\n\n", err, response)
 
@@ -30,7 +30,7 @@ func TestAPICLient(t *testing.T) {
 		t.Fail()
 	}
 
-	account, err := client.GetAccount(accountData.ID)
+	account, err := accounts.Get(accountData.ID)
 
 	fmt.Printf("\nFETCH ****************\n\nerror: %v\n\nresponse: %v\n\n", err, account)
 
@@ -38,7 +38,7 @@ func TestAPICLient(t *testing.T) {
 		t.Fail()
 	}
 
-	err = client.DeleteAccount(account.ID, 0)
+	err = accounts.Delete(account.ID, 0)
 
 	fmt.Printf("\nDELETE ***************\n\nerror: %v\n\n", err)
 
