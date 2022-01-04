@@ -72,12 +72,7 @@ func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
 func (c *form3ApiClient) GetAccount(id string) (AccountData, error) {
 	var accountData AccountData
 	err := c.AccountHandler.Fetch(id, nil, &accountData)
-
-	if err != nil {
-		return accountData, err
-	}
-
-	return accountData, nil
+	return accountData, err
 }
 
 func (c *form3ApiClient) DeleteAccount(id string, version int) error {
@@ -87,10 +82,5 @@ func (c *form3ApiClient) DeleteAccount(id string, version int) error {
 func (c *form3ApiClient) CreateAccount(accountData AccountData) (AccountData, error) {
 	var response AccountData
 	err := c.AccountHandler.Create(&accountData, &response)
-
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
+	return response, err
 }
