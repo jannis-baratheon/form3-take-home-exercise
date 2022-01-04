@@ -77,7 +77,7 @@ var _ = Describe("RestResourceHandler", func() {
 				})
 		})
 
-		It("should fetch resource", func() {
+		It("fetches resource", func() {
 			expectedPerson := person{"Smith"}
 
 			server.AppendHandlers(
@@ -93,7 +93,7 @@ var _ = Describe("RestResourceHandler", func() {
 			Expect(response).To(Equal(expectedPerson))
 		})
 
-		It("should delete resource", func() {
+		It("deletes resource", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("DELETE", resourcePath+"/1", "version=1"),
@@ -104,7 +104,7 @@ var _ = Describe("RestResourceHandler", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should create resource", func() {
+		It("creates resource", func() {
 			payload := person{"Smith"}
 			expectedResponse := person{"Gennings"}
 
@@ -140,7 +140,7 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf("should report default remote error during %s", reqName), func() {
+			It(fmt.Sprintf(`reports default remote error during "%s" call`, reqName), func() {
 				err := req(client)
 
 				Expect(err).To(MatchError(fmt.Errorf("remote server returned error status: 500")))
@@ -168,7 +168,7 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
+			It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
 				err := req(client)
 
 				Expect(err).To(MatchError(customError))
