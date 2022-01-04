@@ -47,10 +47,11 @@ var _ = Describe("RestResourceHandler", func() {
 	var url *url.URL
 
 	const resourceEncoding = "application/json"
+	const resourcePath = "/api/people"
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		url, _ = url.Parse(fmt.Sprintf("%s/api/people", server.URL()))
+		url, _ = url.Parse(server.URL() + resourcePath)
 		httpClient = &http.Client{}
 	})
 
@@ -73,7 +74,7 @@ var _ = Describe("RestResourceHandler", func() {
 		It("should fetch resource", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", "/api/people/1", "attrs=name"),
+					ghttp.VerifyRequest("GET", resourcePath+"/1", "attrs=name"),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.RespondWith(http.StatusOK, `{ "data": {"name": "Smith"} }`)))
 
@@ -87,7 +88,7 @@ var _ = Describe("RestResourceHandler", func() {
 		It("should delete resource", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("DELETE", "/api/people/1", "version=1"),
+					ghttp.VerifyRequest("DELETE", resourcePath+"/1", "version=1"),
 					ghttp.RespondWith(http.StatusNoContent, nil)))
 
 			err := client.Delete("1", map[string]string{"version": "1"})
@@ -101,7 +102,7 @@ var _ = Describe("RestResourceHandler", func() {
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("POST", "/api/people"),
+					ghttp.VerifyRequest("POST", resourcePath),
 					ghttp.VerifyMimeType(resourceEncoding),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.VerifyJSONRepresenting(wrapper{payload}),
@@ -123,14 +124,13 @@ var _ = Describe("RestResourceHandler", func() {
 					ResourceEncoding: resourceEncoding,
 					ResourceURL:      *url,
 				})
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
 		forEachExampleValidRequest(func(reqName string, req request) {
 			It(fmt.Sprintf("should report default remote error during %s", reqName), func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.RespondWith(http.StatusInternalServerError, nil)))
-
 				err := req(client)
 
 				Expect(err).To(MatchError(fmt.Errorf("remote server returned error status: 500")))
@@ -151,14 +151,13 @@ var _ = Describe("RestResourceHandler", func() {
 						return customError
 					},
 				})
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
 		forEachExampleValidRequest(func(reqName string, req request) {
 			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.RespondWith(http.StatusInternalServerError, nil)))
-
 				err := req(client)
 
 				Expect(err).To(MatchError(customError))
