@@ -1,13 +1,14 @@
 package restresourcehandler_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
+	"io/ioutil"
 	"net/http"
-	"net/url"
 )
 
 type person struct {
@@ -16,6 +17,10 @@ type person struct {
 
 type wrapper struct {
 	Data person `json:"data"`
+}
+
+type apiError struct {
+	ErrorMessage string `json:"error_message"`
 }
 
 type request func(client restresourcehandler.RestResourceHandler) error
@@ -29,8 +34,8 @@ var exampleValidRequests = map[string]request{
 		return client.Delete("1", map[string]string{"version": "1"})
 	},
 	"create": func(client restresourcehandler.RestResourceHandler) error {
-		var actualResponse person
-		return client.Create(person{"Smith"}, &actualResponse)
+		var response person
+		return client.Create(person{"Smith"}, &response)
 	},
 }
 
@@ -44,14 +49,14 @@ var _ = Describe("RestResourceHandler", func() {
 	var server *ghttp.Server
 	var httpClient *http.Client
 	var client restresourcehandler.RestResourceHandler
-	var url *url.URL
+	var url string
 
 	const resourceEncoding = "application/json"
 	const resourcePath = "/api/people"
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		url, _ = url.Parse(server.URL() + resourcePath)
+		url = server.URL() + resourcePath
 		httpClient = &http.Client{}
 	})
 
@@ -63,26 +68,28 @@ var _ = Describe("RestResourceHandler", func() {
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
+				url,
 				restresourcehandler.RestResourceHandlerConfig{
 					IsDataWrapped:    true,
 					DataPropertyName: "data",
 					ResourceEncoding: resourceEncoding,
-					ResourceURL:      *url,
 				})
 		})
 
 		It("should fetch resource", func() {
+			expectedPerson := person{"Smith"}
+
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("GET", resourcePath+"/1", "attrs=name"),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
-					ghttp.RespondWith(http.StatusOK, `{ "data": {"name": "Smith"} }`)))
+					ghttp.RespondWithJSONEncoded(http.StatusOK, wrapper{expectedPerson})))
 
 			var response person
 			err := client.Fetch("1", map[string]string{"attrs": "name"}, &response)
 
 			Expect(err).To(Succeed())
-			Expect(response).To(Equal(person{"Smith"}))
+			Expect(response).To(Equal(expectedPerson))
 		})
 
 		It("should delete resource", func() {
@@ -120,9 +127,9 @@ var _ = Describe("RestResourceHandler", func() {
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
+				url,
 				restresourcehandler.RestResourceHandlerConfig{
 					ResourceEncoding: resourceEncoding,
-					ResourceURL:      *url,
 				})
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -138,15 +145,15 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 	})
 
-	Context("with custom remote error extractor", func() {
+	Context("with custom remote error extractor returning an error not based on response", func() {
 		customError := fmt.Errorf("some custom error")
 
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
+				url,
 				restresourcehandler.RestResourceHandlerConfig{
 					ResourceEncoding: resourceEncoding,
-					ResourceURL:      *url,
 					RemoteErrorExtractor: func(response *http.Response) error {
 						return customError
 					},
@@ -161,6 +168,44 @@ var _ = Describe("RestResourceHandler", func() {
 				err := req(client)
 
 				Expect(err).To(MatchError(customError))
+			})
+		})
+	})
+
+	Context("with custom remote error extractor returning error based on message from response", func() {
+		BeforeEach(func() {
+			client = restresourcehandler.NewRestResourceHandler(
+				httpClient,
+				url,
+				restresourcehandler.RestResourceHandlerConfig{
+					ResourceEncoding: resourceEncoding,
+					RemoteErrorExtractor: func(response *http.Response) error {
+						respPayload, err := ioutil.ReadAll(response.Body)
+
+						if err != nil {
+							return err
+						}
+
+						var remoteError apiError
+						err = json.Unmarshal(respPayload, &remoteError)
+
+						if err != nil {
+							return err
+						}
+
+						return fmt.Errorf(`http status %d, message "%s"`, response.StatusCode, remoteError.ErrorMessage)
+					},
+				})
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
+		})
+
+		forEachExampleValidRequest(func(reqName string, req request) {
+			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
+				err := req(client)
+
+				Expect(err).To(MatchError(fmt.Errorf(`http status 500, message "some api error occurred"`)))
 			})
 		})
 	})

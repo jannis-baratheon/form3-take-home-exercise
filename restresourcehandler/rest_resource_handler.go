@@ -2,36 +2,50 @@ package restresourcehandler
 
 import (
 	"net/http"
+	"net/url"
 )
 
 type RemoteErrorExtractor func(response *http.Response) error
 
 type RestResourceHandler interface {
-	Fetch(id string, params map[string]string, res interface{}) error
+	Fetch(id string, params map[string]string, response interface{}) error
 	Delete(id string, params map[string]string) error
-	Create(resource interface{}, res interface{}) error
+	Create(resourceToCreate interface{}, response interface{}) error
 }
 
 type restResourceHandler struct {
-	HttpClient *http.Client
-	Config     RestResourceHandlerConfig
+	HttpClient  *http.Client
+	Config      RestResourceHandlerConfig
+	ResourceURL url.URL
 }
 
-func NewRestResourceHandler(httpClient *http.Client, config RestResourceHandlerConfig) RestResourceHandler {
+func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config RestResourceHandlerConfig) RestResourceHandler {
 	validateRestResourceHandlerConfig(config)
 
-	return &restResourceHandler{
-		Config:     config,
-		HttpClient: httpClient,
+	url, err := url.Parse(resourceURL)
+	if err != nil {
+		panic(err)
 	}
+
+	if !url.IsAbs() {
+		panic("resource url must be absolute")
+	}
+
+	handler := restResourceHandler{
+		Config:      config,
+		HttpClient:  httpClient,
+		ResourceURL: *url,
+	}
+
+	return &handler
 }
 
-func (c *restResourceHandler) Fetch(id string, params map[string]string, res interface{}) error {
+func (c *restResourceHandler) Fetch(id string, params map[string]string, response interface{}) error {
 	return c.request(requestParams{
 		HttpMethod:     http.MethodGet,
 		ResourceId:     id,
 		QueryParams:    params,
-		Response:       res,
+		Response:       response,
 		ExpectedStatus: http.StatusOK})
 }
 
@@ -44,12 +58,12 @@ func (c *restResourceHandler) Delete(id string, params map[string]string) error 
 		ExpectedStatus:   http.StatusNoContent})
 }
 
-func (c *restResourceHandler) Create(resource interface{}, res interface{}) error {
+func (c *restResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
 	return c.request(requestParams{
 		HttpMethod:          http.MethodPost,
 		DoDiscardResourceId: true,
-		Resource:            resource,
-		Response:            res,
+		Resource:            resourceToCreate,
+		Response:            response,
 		ExpectedStatus:      http.StatusCreated})
 }
 
@@ -60,7 +74,7 @@ func (c *restResourceHandler) request(params requestParams) error {
 	if !params.DoDiscardResourceId {
 		id = &params.ResourceId
 	}
-	req, err := createRequest(c.Config, params.HttpMethod, id, params.QueryParams, params.Resource)
+	req, err := createRequest(c.Config, c.ResourceURL, params.HttpMethod, id, params.QueryParams, params.Resource)
 
 	if err != nil {
 		return err

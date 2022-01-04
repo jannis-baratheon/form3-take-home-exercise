@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 )
 
@@ -14,33 +15,30 @@ func defaultRemoteErrorExtractor(response *http.Response) error {
 	return fmt.Errorf(`remote server returned error status: %d`, response.StatusCode)
 }
 
-func createRequest(config RestResourceHandlerConfig, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
-	var err error
-
-	// copy base url
-	u := config.ResourceURL
+func createRequest(config RestResourceHandlerConfig, resourceUrl url.URL, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
 	// append id
 	if id != nil {
-		u.Path = path.Join(u.Path, *id)
+		resourceUrl.Path = path.Join(resourceUrl.Path, *id)
 	}
 
 	if queryParams != nil {
-		query := u.Query()
+		query := resourceUrl.Query()
 		for key, val := range queryParams {
 			query.Add(key, val)
 		}
-		u.RawQuery = query.Encode()
+		resourceUrl.RawQuery = query.Encode()
 	}
 
 	var body io.Reader
 	if resource != nil {
+		var err error
 		body, err = readerForResource(config, resource)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return http.NewRequest(method, u.String(), body)
+	return http.NewRequest(method, resourceUrl.String(), body)
 }
 
 func readResponse(config RestResourceHandlerConfig, reader io.Reader, response interface{}) error {
