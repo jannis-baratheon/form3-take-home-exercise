@@ -45,7 +45,7 @@ var _ = Describe("Form3ApiClient", func() {
 		server.Close()
 	})
 
-	Context("when request is valid", func() {
+	Context("when on happy-path", func() {
 		var client form3apiclient.Form3ApiClient
 
 		BeforeEach(func() {

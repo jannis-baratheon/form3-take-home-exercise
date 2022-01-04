@@ -63,7 +63,7 @@ var _ = Describe("RestResourceHandler", func() {
 		server.Close()
 	})
 
-	Context("when request is valid", func() {
+	Context("when on happy-path", func() {
 		var client restresourcehandler.RestResourceHandler
 
 		BeforeEach(func() {
