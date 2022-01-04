@@ -162,13 +162,14 @@ var _ = Describe("RestResourceHandler", func() {
 						return customError
 					},
 				})
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.RespondWith(http.StatusInternalServerError, nil)))
+
 				err := req(client)
 
 				Expect(err).To(MatchError(customError))
@@ -178,7 +179,7 @@ var _ = Describe("RestResourceHandler", func() {
 
 	Context("with custom remote error extractor returning error based on message from response", func() {
 		var client restresourcehandler.RestResourceHandler
-		
+
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
@@ -202,13 +203,14 @@ var _ = Describe("RestResourceHandler", func() {
 						return fmt.Errorf(`http status %d, message "%s"`, response.StatusCode, remoteError.ErrorMessage)
 					},
 				})
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf("should report custom remote error during %s", reqName), func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
+
 				err := req(client)
 
 				Expect(err).To(MatchError(fmt.Errorf(`http status 500, message "some api error occurred"`)))

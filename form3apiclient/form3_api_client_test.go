@@ -127,10 +127,10 @@ var _ = Describe("Form3ApiClient", func() {
 
 		Context("when remote error occurs", func() {
 			forEachExampleValidApiCall(func(callName string, call apiCall) {
-				expectedErrorStatus := http.StatusBadRequest
-				expectedRemoteErrorMessage := "i have no idea what language you speak"
-
 				It(fmt.Sprintf(`includes server message in error if available for "%s" call`, callName), func() {
+					expectedErrorStatus := http.StatusBadRequest
+					expectedRemoteErrorMessage := "i have no idea what language you speak"
+
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWithJSONEncoded(expectedErrorStatus, remoteError{expectedRemoteErrorMessage})))
@@ -146,12 +146,9 @@ var _ = Describe("Form3ApiClient", func() {
 							http.StatusText(expectedErrorStatus),
 							expectedRemoteErrorMessage)))
 				})
-			})
-
-			forEachExampleValidApiCall(func(callName string, call apiCall) {
-				expectedErrorStatus := http.StatusBadRequest
 
 				It(fmt.Sprintf(`does not include server message in error if unavailable for "%s" call`, callName), func() {
+					expectedErrorStatus := http.StatusBadRequest
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWith(expectedErrorStatus, nil)))
