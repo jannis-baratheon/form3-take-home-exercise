@@ -2,13 +2,11 @@ package form3apiclient_test
 
 import (
 	"fmt"
-	"net/http"
-
-	"github.com/google/uuid"
 	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
+	"net/http"
 )
 
 type wrapper struct {
