@@ -3,12 +3,11 @@ package form3apiclient
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
-
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 )
 
 type form3APIRemoteError struct {
@@ -52,7 +51,7 @@ func extractRemoteError(response *http.Response) error {
 	return fmt.Errorf(`api responded with error: http status code %d, http status "%s", server message: "%s"`, response.StatusCode, response.Status, remoteError.ErrorMessage)
 }
 
-func NewClient(apiURL string, httpClient *http.Client) Form3ApiClient {
+func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
 	url, err := url.Parse(apiURL)
 
 	if err != nil {

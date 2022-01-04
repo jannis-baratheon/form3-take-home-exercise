@@ -2,16 +2,14 @@ package form3apiclient_test
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
 	"net/http"
 	"testing"
-
-	"github.com/google/uuid"
-
-	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
 )
 
 func TestAPICLient(t *testing.T) {
-	client := form3apiclient.NewClient("http://localhost:8080/v1", &http.Client{})
+	client := form3apiclient.NewForm3APIClient("http://localhost:8080/v1", &http.Client{})
 
 	accountData := form3apiclient.AccountData{
 		ID:             uuid.NewString(),

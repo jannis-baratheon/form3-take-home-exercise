@@ -48,10 +48,9 @@ func forEachExampleValidRequest(consumer func(string, request)) {
 var _ = Describe("RestResourceHandler", func() {
 	var server *ghttp.Server
 	var httpClient *http.Client
-	var client restresourcehandler.RestResourceHandler
 	var url string
 
-	const resourceEncoding = "application/json"
+	const resourceEncoding = "application/json; charset=utf-8"
 	const resourcePath = "/api/people"
 
 	BeforeEach(func() {
@@ -65,6 +64,8 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("when request is valid", func() {
+		var client restresourcehandler.RestResourceHandler
+
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
@@ -110,7 +111,7 @@ var _ = Describe("RestResourceHandler", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", resourcePath),
-					ghttp.VerifyMimeType(resourceEncoding),
+					ghttp.VerifyContentType(resourceEncoding),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.VerifyJSONRepresenting(wrapper{payload}),
 					ghttp.RespondWithJSONEncoded(http.StatusCreated, wrapper{expectedResponse})))
@@ -124,6 +125,8 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("with default remote error extractor", func() {
+		var client restresourcehandler.RestResourceHandler
+
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
@@ -146,6 +149,7 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("with custom remote error extractor returning an error not based on response", func() {
+		var client restresourcehandler.RestResourceHandler
 		customError := fmt.Errorf("some custom error")
 
 		BeforeEach(func() {
@@ -173,6 +177,8 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("with custom remote error extractor returning error based on message from response", func() {
+		var client restresourcehandler.RestResourceHandler
+		
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
