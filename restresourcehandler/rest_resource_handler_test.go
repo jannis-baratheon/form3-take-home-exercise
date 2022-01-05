@@ -149,7 +149,7 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("with custom remote error extractor", func() {
-		Context("providing an error not based on response", func() {
+		Context("providing error not based on response content", func() {
 			var client restresourcehandler.RestResourceHandler
 			customError := fmt.Errorf("some custom error")
 
