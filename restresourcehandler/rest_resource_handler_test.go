@@ -63,7 +63,7 @@ var _ = Describe("RestResourceHandler", func() {
 		server.Close()
 	})
 
-	When("on happy-path", func() {
+	Context("on happy-path", func() {
 		var client restresourcehandler.RestResourceHandler
 
 		BeforeEach(func() {
@@ -140,7 +140,7 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 
 		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf(`reports default remote error during "%s" call`, reqName), func() {
+			It(fmt.Sprintf(`provides default error during "%s" call`, reqName), func() {
 				err := req(client)
 
 				Expect(err).To(MatchError(fmt.Errorf("remote server returned error status: 500")))
@@ -148,72 +148,74 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 	})
 
-	Context("with custom remote error extractor returning an error not based on response", func() {
-		var client restresourcehandler.RestResourceHandler
-		customError := fmt.Errorf("some custom error")
+	Context("with custom remote error extractor", func() {
+		Context("providing an error not based on response", func() {
+			var client restresourcehandler.RestResourceHandler
+			customError := fmt.Errorf("some custom error")
 
-		BeforeEach(func() {
-			client = restresourcehandler.NewRestResourceHandler(
-				httpClient,
-				url,
-				restresourcehandler.RestResourceHandlerConfig{
-					ResourceEncoding: resourceEncoding,
-					RemoteErrorExtractor: func(response *http.Response) error {
-						return customError
-					},
+			BeforeEach(func() {
+				client = restresourcehandler.NewRestResourceHandler(
+					httpClient,
+					url,
+					restresourcehandler.RestResourceHandlerConfig{
+						ResourceEncoding: resourceEncoding,
+						RemoteErrorExtractor: func(response *http.Response) error {
+							return customError
+						},
+					})
+			})
+
+			forEachExampleValidApiCall(func(reqName string, req apiCall) {
+				It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
+					server.AppendHandlers(
+						ghttp.CombineHandlers(
+							ghttp.RespondWith(http.StatusInternalServerError, nil)))
+
+					err := req(client)
+
+					Expect(err).To(MatchError(customError))
 				})
-		})
-
-		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.RespondWith(http.StatusInternalServerError, nil)))
-
-				err := req(client)
-
-				Expect(err).To(MatchError(customError))
 			})
 		})
-	})
 
-	Context("with custom remote error extractor returning error based on message from response", func() {
-		var client restresourcehandler.RestResourceHandler
+		Context("providing error based on response content", func() {
+			var client restresourcehandler.RestResourceHandler
 
-		BeforeEach(func() {
-			client = restresourcehandler.NewRestResourceHandler(
-				httpClient,
-				url,
-				restresourcehandler.RestResourceHandlerConfig{
-					ResourceEncoding: resourceEncoding,
-					RemoteErrorExtractor: func(response *http.Response) error {
-						respPayload, err := ioutil.ReadAll(response.Body)
+			BeforeEach(func() {
+				client = restresourcehandler.NewRestResourceHandler(
+					httpClient,
+					url,
+					restresourcehandler.RestResourceHandlerConfig{
+						ResourceEncoding: resourceEncoding,
+						RemoteErrorExtractor: func(response *http.Response) error {
+							respPayload, err := ioutil.ReadAll(response.Body)
 
-						if err != nil {
-							return err
-						}
+							if err != nil {
+								return err
+							}
 
-						var remoteError apiError
-						err = json.Unmarshal(respPayload, &remoteError)
+							var remoteError apiError
+							err = json.Unmarshal(respPayload, &remoteError)
 
-						if err != nil {
-							return err
-						}
+							if err != nil {
+								return err
+							}
 
-						return fmt.Errorf(`http status %d, message "%s"`, response.StatusCode, remoteError.ErrorMessage)
-					},
+							return fmt.Errorf(`http status %d, message "%s"`, response.StatusCode, remoteError.ErrorMessage)
+						},
+					})
+			})
+
+			forEachExampleValidApiCall(func(reqName string, req apiCall) {
+				It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
+					server.AppendHandlers(
+						ghttp.CombineHandlers(
+							ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
+
+					err := req(client)
+
+					Expect(err).To(MatchError(fmt.Errorf(`http status 500, message "some api error occurred"`)))
 				})
-		})
-
-		forEachExampleValidApiCall(func(reqName string, req apiCall) {
-			It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.RespondWithJSONEncoded(http.StatusInternalServerError, apiError{"some api error occurred"})))
-
-				err := req(client)
-
-				Expect(err).To(MatchError(fmt.Errorf(`http status 500, message "some api error occurred"`)))
 			})
 		})
 	})

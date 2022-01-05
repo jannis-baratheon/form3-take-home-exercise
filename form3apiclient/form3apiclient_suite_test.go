@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestRestresourcehandlerModule(t *testing.T) {
+func TestForm3apiclientModule(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "form3apiclient testsuite")
 }
