@@ -72,7 +72,7 @@ var _ = Describe("Form3ApiClient", func() {
 		server.Close()
 	})
 
-	Context("when on happy-path", func() {
+	When("on happy-path", func() {
 		var client form3apiclient.Form3ApiClient
 
 		BeforeEach(func() {
@@ -125,43 +125,54 @@ var _ = Describe("Form3ApiClient", func() {
 			Expect(actualResponse).To(Equal(expectedData))
 		})
 
-		Context("when remote error occurs", func() {
-			forEachExampleValidApiCall(func(callName string, call apiCall) {
-				It(fmt.Sprintf(`includes server message in error if available for "%s" call`, callName), func() {
-					expectedErrorStatus := http.StatusBadRequest
-					expectedRemoteErrorMessage := "i have no idea what language you speak"
+		When("remote error occurs", func() {
+			When("server provides an error message", func() {
+				expectedErrorStatus := http.StatusBadRequest
+				expectedRemoteErrorMessage := "i have no idea what language you speak"
 
+				BeforeEach(func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWithJSONEncoded(expectedErrorStatus, remoteError{expectedRemoteErrorMessage})))
-
-					_, err := call(client)
-
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(
-						fmt.Errorf(
-							`api responded with error: http status code %d, http status "%d %s", server message: "%s"`,
-							expectedErrorStatus,
-							expectedErrorStatus,
-							http.StatusText(expectedErrorStatus),
-							expectedRemoteErrorMessage)))
 				})
 
-				It(fmt.Sprintf(`does not include server message in error if unavailable for "%s" call`, callName), func() {
-					expectedErrorStatus := http.StatusBadRequest
+				forEachExampleValidApiCall(func(callName string, call apiCall) {
+					It(fmt.Sprintf(`includes server message in returned error for "%s" call`, callName), func() {
+						_, err := call(client)
+
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError(
+							fmt.Errorf(
+								`api responded with error: http status code %d, http status "%d %s", server message: "%s"`,
+								expectedErrorStatus,
+								expectedErrorStatus,
+								http.StatusText(expectedErrorStatus),
+								expectedRemoteErrorMessage)))
+					})
+				})
+			})
+
+			When("server does not provide an error message", func() {
+				expectedErrorStatus := http.StatusBadRequest
+
+				BeforeEach(func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
 							ghttp.RespondWith(expectedErrorStatus, nil)))
+				})
 
-					_, err := call(client)
+				forEachExampleValidApiCall(func(callName string, call apiCall) {
+					It(fmt.Sprintf(`does not include the server message part in returned error for "%s" call`, callName), func() {
+						_, err := call(client)
 
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(
-						fmt.Errorf(
-							`api responded with error: http status code %d, http status "%d %s"`,
-							expectedErrorStatus,
-							expectedErrorStatus,
-							http.StatusText(expectedErrorStatus))))
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError(
+							fmt.Errorf(
+								`api responded with error: http status code %d, http status "%d %s"`,
+								expectedErrorStatus,
+								expectedErrorStatus,
+								http.StatusText(expectedErrorStatus))))
+					})
 				})
 			})
 		})
