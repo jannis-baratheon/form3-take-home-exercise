@@ -1,50 +1,47 @@
 package form3apiclient_test
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"net/http"
-	"testing"
 )
 
-func TestAPICLient(t *testing.T) {
-	t.SkipNow()
+var _ = PDescribe("Form3ApiClient with real server", Label("e2e"), func() {
+	var accounts form3apiclient.Accounts
 
-	accounts := form3apiclient.NewForm3APIClient("http://localhost:8080/v1", &http.Client{}).Accounts()
+	BeforeEach(func() {
+		accounts = form3apiclient.NewForm3APIClient("http://localhost:8080/v1", &http.Client{}).Accounts()
+	})
 
-	accountData := form3apiclient.AccountData{
-		ID:             uuid.NewString(),
-		OrganisationID: uuid.NewString(),
-		Type:           "accounts",
-		Attributes: form3apiclient.AccountAttributes{
-			AccountClassification: "Personal",
-			Name:                  []string{"Jan Kowalski"},
-			Country:               "PL",
-		},
-	}
-	var response form3apiclient.AccountData
-	response, err := accounts.Create(accountData)
+	It("runs simple pipeline without error", func() {
+		var accountData form3apiclient.AccountData
 
-	fmt.Printf("\nCREATE ***************\n\nerror: %v\n\nresponse: %v\n\n", err, response)
+		By("creating an account", func() {
+			accountData := form3apiclient.AccountData{
+				ID:             uuid.NewString(),
+				OrganisationID: uuid.NewString(),
+				Type:           "accounts",
+				Attributes: form3apiclient.AccountAttributes{
+					AccountClassification: "Personal",
+					Name:                  []string{"Jan Kowalski"},
+					Country:               "PL",
+				},
+			}
+			_, err := accounts.Create(accountData)
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-	if err != nil {
-		t.Fail()
-	}
+		By("fetching it afterwards", func() {
+			fetchedAccountData, err := accounts.Get(accountData.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fetchedAccountData).To(Equal(accountData))
+		})
 
-	account, err := accounts.Get(accountData.ID)
-
-	fmt.Printf("\nFETCH ****************\n\nerror: %v\n\nresponse: %v\n\n", err, account)
-
-	if err != nil {
-		t.Fail()
-	}
-
-	err = accounts.Delete(account.ID, 0)
-
-	fmt.Printf("\nDELETE ***************\n\nerror: %v\n\n", err)
-
-	if err != nil {
-		t.Fail()
-	}
-}
+		By("and finally deleting it", func() {
+			err := accounts.Delete(accountData.ID, 0)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
