@@ -30,7 +30,9 @@ jobs:
         run: docker-compose -f "docker/docker-compose.yml" up -d
       
       - name: Test
-        run: ginkgo -v --label-filter="e2e" ./...
+        env:
+            FORM3_API_URL: http://localhost:8080/v1
+        run: ginkgo -v --label-filter=e2e ./...
 
       - name: Stop environment
         if: always()
