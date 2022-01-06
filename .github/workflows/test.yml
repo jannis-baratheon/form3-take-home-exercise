@@ -23,5 +23,8 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+      - name: Install Ginkgo
+        run: go install github.com/onsi/ginkgo/v2/ginkgo@v2.0.0
+
       - name: Test
-        run: $GOPATH/bin/ginkgo -v --label-filter="!e2e" ./...
+        run: ginkgo -v --label-filter="!e2e" ./...
