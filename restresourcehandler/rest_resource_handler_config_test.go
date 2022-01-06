@@ -12,8 +12,8 @@ func someValidRestResourceHandlerConfig() RestResourceHandlerConfig {
 }
 
 var _ = Describe("RestResourceHandlerConfig", func() {
-	Context("should panic when validated", func() {
-		It("when data is wrapped but no property name has been given", func() {
+	Context("panics during validation", func() {
+		It("when data is wrapped but no property name has been set", func() {
 			config := someValidRestResourceHandlerConfig()
 			config.IsDataWrapped = true
 			config.DataPropertyName = ""
@@ -21,7 +21,7 @@ var _ = Describe("RestResourceHandlerConfig", func() {
 			Expect(func() { validateRestResourceHandlerConfig(config) }).To(PanicWith("IsDataWrapped is set, but DataPropertyName has not been given."))
 		})
 
-		It("when data is not wrapped but property name has been given", func() {
+		It("when data is not wrapped but property name has been set", func() {
 			config := someValidRestResourceHandlerConfig()
 			config.IsDataWrapped = false
 			config.DataPropertyName = "someproperty"
@@ -29,7 +29,7 @@ var _ = Describe("RestResourceHandlerConfig", func() {
 			Expect(func() { validateRestResourceHandlerConfig(config) }).To(PanicWith("IsDataWrapped is not set, but DataPropertyName has been given."))
 		})
 
-		It("when resource enoding is not set", func() {
+		It("when resource enoding has not been set", func() {
 			config := someValidRestResourceHandlerConfig()
 			config.ResourceEncoding = ""
 
