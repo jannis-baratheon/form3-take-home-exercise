@@ -19,6 +19,12 @@ services:
       - DATABASE-SSL-MODE=disable
       - DATABASE-USERNAME=interview_accountapi_user
       - DATABASE-PASSWORD=123
+    healthcheck:
+      test: 'curl --fail --silent localhost:8080/v1/health | grep "\"status\": \"up\"" || exit 1'
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     ports:
       - 8080:8080
   postgresql:
