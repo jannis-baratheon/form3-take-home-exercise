@@ -13,7 +13,7 @@ func someValidRequestParams() requestParams {
 	}
 }
 
-var _ = FDescribe("requestParams", func() {
+var _ = Describe("requestParams", func() {
 	Context("panics during validation", func() {
 		It("when invalid http method has not been set", func() {
 			params := someValidRequestParams()
