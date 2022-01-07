@@ -25,4 +25,10 @@ jobs:
 
       - name: Test
         timeout-minutes: 10
-        run: ginkgo --label-filter="!e2e" -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+        run: ginkgo --label-filter="!e2e" --junit-report=test_report.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+
+      - name: Archive test results as annotations
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+            files: test_report.xml

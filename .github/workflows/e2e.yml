@@ -27,8 +27,14 @@ jobs:
         timeout-minutes: 10
         env:
           FORM3_API_URL: http://localhost:8080/v1
-        run: ginkgo --label-filter=e2e -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+        run: ginkgo --label-filter=e2e --junit-report=test_report_e2e.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
 
       - name: Stop environment
         if: always()
         run: docker-compose -f "docker/docker-compose.yml" down
+      
+      - name: Archive test results as annotations
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+            files: test_report_e2e.xml
