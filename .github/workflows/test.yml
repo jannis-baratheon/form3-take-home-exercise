@@ -26,21 +26,21 @@ jobs:
 
       - name: Test
         timeout-minutes: 10
-        run: ginkgo --label-filter="!e2e" --junit-report=test_report.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+        run: ginkgo --label-filter="!e2e" --output-dir=test-reports --junit-report=test_report.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
 
       # TODO TESTING
-      # - name: Archive test results as annotations
-      #   uses: EnricoMi/publish-unit-test-result-action@v1
-      #   if: always()
-      #   with:
-      #     files: test_report.xml
+      - name: Archive test results as annotations
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: 'test-reports/*test_report.xml'
 
       # TODO TESTING
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v2
         if: always() # always run even if the previous step fails
         with:
-          report_paths: "**/test_report.xml"
+          report_paths: 'test-reports/*test_report.xml'
 
       # TODO TESTING
       - name: Upload artifacts
@@ -48,4 +48,4 @@ jobs:
         if: always()
         with:
           name: tests-results
-          path: "**/test_report.xml"
+          path: test-reports
