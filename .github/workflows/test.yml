@@ -24,4 +24,5 @@ jobs:
         run: go install github.com/onsi/ginkgo/v2/ginkgo@v2.0.0
 
       - name: Test
-        run: ginkgo -v --label-filter="!e2e" ./...
+        timeout-minutes: 10
+        run: ginkgo --label-filter="!e2e" -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace

@@ -19,7 +19,7 @@ jobs:
 
       - name: go vet
         run: go vet ./...
-      
+
       - name: Install GoLint
         run: go install golang.org/x/lint/golint@latest
 
