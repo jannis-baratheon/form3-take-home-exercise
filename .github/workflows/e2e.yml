@@ -28,7 +28,7 @@ jobs:
         timeout-minutes: 10
         env:
           FORM3_API_URL: http://localhost:8080/v1
-        run: ginkgo --label-filter="e2e" --output-dir=test-reports --junit-report=e2e_test_report.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+        run: ginkgo --label-filter="e2e" --output-dir=test-reports --junit-report=e2e_test_report.xml --keep-separate-reports --keep-separate-coverprofiles -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
 
       - name: Stop environment
         if: always()
