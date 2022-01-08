@@ -33,25 +33,3 @@ jobs:
       - name: Stop environment
         if: always()
         run: docker-compose -f "docker/docker-compose.yml" down
-
-      # TODO TESTING
-      - name: Archive test results as annotations
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: "test-reports/*test_report.xml"
-
-      # TODO TESTING
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v2
-        if: always() # always run even if the previous step fails
-        with:
-          report_paths: "test-reports/*test_report.xml"
-
-      # TODO TESTING
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: tests-results
-          path: test-reports
