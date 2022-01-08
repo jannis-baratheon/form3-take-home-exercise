@@ -45,14 +45,6 @@ jobs:
         with:
           report_paths: "test-reports/*test_report.xml"
 
-      # TODO TESTING
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: tests-results
-          path: test-reports
-
       - name: Publish Test Report
         if: always()
         uses: scacap/action-surefire-report@v1
@@ -63,11 +55,19 @@ jobs:
         id: xunit-viewer
         uses: AutoModality/action-xunit-viewer@v1
         with:
-          results: ${{ env.RESULTS_PATH }}
+          results: test-results
       - name: The generated report
         run: echo "The report is ${{ steps.xunit-viewer.outputs.report-file }}"    
       - name: Attach the report
         uses: actions/upload-artifact@v1
         with:
           name: alternate-results-path-reports
-          path: ${{ env.RESULTS_PATH }}
+          path: test-results
+
+      # TODO TESTING
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: tests-results
+          path: test-reports
