@@ -27,3 +27,6 @@ jobs:
       - name: Test
         timeout-minutes: 10
         run: ginkgo --label-filter="!e2e" --output-dir=test-reports --junit-report=test_report.xml -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
+
+      - name: List files
+        run: find .

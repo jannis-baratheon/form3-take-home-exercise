@@ -33,3 +33,6 @@ jobs:
       - name: Stop environment
         if: always()
         run: docker-compose -f "docker/docker-compose.yml" down
+
+      - name: List files
+        run: find .
