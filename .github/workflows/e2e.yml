@@ -34,43 +34,12 @@ jobs:
         if: always()
         run: docker-compose -f "docker/docker-compose.yml" down
 
-      - name: List files
-        run: find .
-
-      # TODO TESTING
       - name: Archive test results as annotations
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
           files: "test-reports/*test_report.xml"
 
-      # TODO TESTING
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v2
-        if: always() # always run even if the previous step fails
-        with:
-          report_paths: "test-reports/*test_report.xml"
-
-      - name: Publish Test Report
-        if: always()
-        uses: scacap/action-surefire-report@v1
-        with:
-          report_paths: "test-reports/*test_report.xml"
-
-      - name: Generate Report
-        id: xunit-viewer
-        uses: AutoModality/action-xunit-viewer@v1
-        with:
-          results: test-results
-      - name: The generated report
-        run: echo "The report is ${{ steps.xunit-viewer.outputs.report-file }}"    
-      - name: Attach the report
-        uses: actions/upload-artifact@v1
-        with:
-          name: alternate-results-path-reports
-          path: test-results
-
-      # TODO TESTING
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         if: always()
