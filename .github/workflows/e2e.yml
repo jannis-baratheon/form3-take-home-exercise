@@ -1,4 +1,4 @@
-name: E2E test
+name: E2E tests
 
 on:
   push:
@@ -19,9 +19,9 @@ jobs:
           go-version: 1.17
 
       - name: Install Ginkgo
-        run: go install github.com/onsi/ginkgo/v2/ginkgo@v2.0.0
+        run: go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
-      - name: Start environment
+      - name: Start test environment
         run: docker-compose -f "docker/docker-compose.yml" up -d
 
       - name: Test
@@ -30,15 +30,9 @@ jobs:
           FORM3_API_URL: http://localhost:8080/v1
         run: ginkgo --label-filter="e2e" --output-dir=test-reports --junit-report=e2e_test_report.xml --keep-separate-reports --keep-separate-coverprofiles -v -r --randomize-all --randomize-suites --fail-on-pending --keep-going --cover --race --trace
 
-      - name: Stop environment
+      - name: Stop test environment
         if: always()
         run: docker-compose -f "docker/docker-compose.yml" down
-
-      - name: Archive test results as annotations
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          files: "test-reports/*test_report.xml"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
