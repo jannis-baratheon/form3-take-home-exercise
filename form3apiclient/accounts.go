@@ -37,7 +37,7 @@ type AccountAttributes struct {
 
 type Accounts interface {
 	Get(id string) (AccountData, error)
-	Delete(id string, version int) error
+	Delete(id string, version int64) error
 	Create(accountData AccountData) (AccountData, error)
 }
 
@@ -65,7 +65,7 @@ func (a *accounts) Get(id string) (AccountData, error) {
 	return accountData, err
 }
 
-func (a *accounts) Delete(id string, version int) error {
+func (a *accounts) Delete(id string, version int64) error {
 	return a.Handler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
 }
 

@@ -21,19 +21,6 @@ type remoteError struct {
 	Message string `json:"error_message"`
 }
 
-func someValidAccountData(id string) form3apiclient.AccountData {
-	return form3apiclient.AccountData{
-		ID:             id,
-		OrganisationID: someValidUuid,
-		Type:           "accounts",
-		Attributes: form3apiclient.AccountAttributes{
-			AccountClassification: "Personal",
-			Name:                  []string{"Jan Kowalski"},
-			Country:               "PL",
-		},
-	}
-}
-
 type apiCall func(client form3apiclient.Form3ApiClient) (interface{}, error)
 
 var exampleValidApiCalls = map[string]apiCall{
