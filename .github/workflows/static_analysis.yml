@@ -21,8 +21,5 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-      - name: Install GoLint
-        run: go install golang.org/x/lint/golint@latest
-
-      - name: golint
-        run: golint -set_exit_status ./...
+      - name: revive
+        uses: docker://morphy/revive-action:v2
