@@ -1,0 +1,11 @@
+linters:
+  enable-all: true
+  disable:
+  - tagliatelle
+  - golint
+  - interfacer
+  - maligned
+  - scopelint
+  - exhaustivestruct
+  - paralleltest
+  - testpackage

@@ -18,8 +18,5 @@ jobs:
         with:
           go-version: 1.17
 
-      - name: go vet
-        run: go vet ./...
-
-      - name: revive
-        uses: docker://morphy/revive-action:v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
