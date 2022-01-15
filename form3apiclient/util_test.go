@@ -13,7 +13,7 @@ const (
 )
 
 func noDescEntry(args ...interface{}) TableEntry {
-	return Entry(nil, args)
+	return Entry(nil, args...)
 }
 
 var _ = Describe("util", func() {
