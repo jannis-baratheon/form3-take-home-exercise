@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
+	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 )
 
 // Account represents an account in the form3 org section.

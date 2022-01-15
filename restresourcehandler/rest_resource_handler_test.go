@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
+	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"

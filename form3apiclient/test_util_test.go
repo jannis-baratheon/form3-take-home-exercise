@@ -1,6 +1,6 @@
 package form3apiclient_test
 
-import "github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
+import "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
 
 func someValidAccountData(id string) form3apiclient.AccountData {
 	return form3apiclient.AccountData{

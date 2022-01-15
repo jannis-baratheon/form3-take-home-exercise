@@ -9,7 +9,7 @@ import (
 	"path"
 
 	"github.com/google/uuid"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
+	"github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
