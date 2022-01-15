@@ -14,11 +14,11 @@ type form3APIRemoteError struct {
 }
 
 type Form3ApiClient interface {
-	Accounts() Accounts
+	Accounts() *accounts
 }
 
 type form3ApiClient struct {
-	AccountsEndpoint Accounts
+	AccountsEndpoint *accounts
 }
 
 var config = restresourcehandler.Config{
@@ -56,7 +56,7 @@ func extractRemoteError(response *http.Response) error {
 		remoteError.ErrorMessage)
 }
 
-func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
+func NewForm3APIClient(apiURL string, httpClient *http.Client) *form3ApiClient {
 	accounts, err := newAccounts(apiURL, httpClient)
 	if err != nil {
 		panic(err)
@@ -65,6 +65,6 @@ func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
 	return &form3ApiClient{AccountsEndpoint: accounts}
 }
 
-func (c *form3ApiClient) Accounts() Accounts {
+func (c *form3ApiClient) Accounts() *accounts {
 	return c.AccountsEndpoint
 }

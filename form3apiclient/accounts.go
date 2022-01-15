@@ -48,7 +48,7 @@ type accounts struct {
 
 const resourcePath = "organisation/accounts"
 
-func newAccounts(apiURL string, httpClient *http.Client) (Accounts, error) {
+func newAccounts(apiURL string, httpClient *http.Client) (*accounts, error) {
 	accountsResourceURL, err := join(apiURL, resourcePath)
 	if err != nil {
 		return nil, err
