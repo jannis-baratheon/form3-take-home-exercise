@@ -24,7 +24,7 @@ var _ = Describe("util", func() {
 			Entry(nil, "http://example.com/", "some/path", "http://example.com/some/path"),
 			Entry(nil, "http://example.com/", "/some/path", "http://example.com/some/path"),
 			Entry(nil, "http://example.com/", "/some/path/", "http://example.com/some/path"),
-			
+
 			Entry(nil, "http://example.com/v1", "some/path", "http://example.com/v1/some/path"),
 			Entry(nil, "http://example.com/v1", "/some/path", "http://example.com/v1/some/path"),
 			Entry(nil, "http://example.com/v1/", "/some/path", "http://example.com/v1/some/path"),
@@ -44,7 +44,7 @@ var _ = Describe("util", func() {
 			Entry(nil, "example.com/v1", someValidRelativePath, "baseAbsoluteUrl must be absolute"),
 			Entry(nil, "http://example.com/v1?param=value", someValidRelativePath, "baseAbsoluteUrl with query is not supported"),
 			Entry(nil, "http://example.com/v1#fragment", someValidRelativePath, "baseAbsoluteUrl with fragment is not supported"),
-			
+
 			Entry(nil, someValidAbsolutePath, "/some/path?param=value", "relativeUrl with query is not supported"),
 			Entry(nil, someValidAbsolutePath, "/some/path#fragment", "relativeUrl with fragment is not supported"),
 		)
