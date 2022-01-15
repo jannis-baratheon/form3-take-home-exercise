@@ -6,37 +6,37 @@ import (
 	"path"
 )
 
-func join(baseAbsoluteUrl string, relativePath string) (string, error) {
-	baseUrl, err := url.Parse(baseAbsoluteUrl)
+func join(baseAbsoluteURL string, relativePath string) (string, error) {
+	baseURL, err := url.Parse(baseAbsoluteURL)
 	if err != nil {
 		return "", err
 	}
 
-	if !baseUrl.IsAbs() {
-		return "", fmt.Errorf("baseAbsoluteUrl must be absolute")
+	if !baseURL.IsAbs() {
+		return "", fmt.Errorf("baseAbsoluteURL must be absolute")
 	}
 
-	if len(baseUrl.Query()) > 0 {
-		return "", fmt.Errorf("baseAbsoluteUrl with query is not supported")
+	if len(baseURL.Query()) > 0 {
+		return "", fmt.Errorf("baseAbsoluteURL with query is not supported")
 	}
 
-	if baseUrl.Fragment != "" {
-		return "", fmt.Errorf("baseAbsoluteUrl with fragment is not supported")
+	if baseURL.Fragment != "" {
+		return "", fmt.Errorf("baseAbsoluteURL with fragment is not supported")
 	}
 
-	relativeUrl, err := url.Parse(relativePath)
+	relativeURL, err := url.Parse(relativePath)
 	if err != nil {
 		return "", err
 	}
 
-	if len(relativeUrl.Query()) > 0 {
-		return "", fmt.Errorf("relativeUrl with query is not supported")
+	if len(relativeURL.Query()) > 0 {
+		return "", fmt.Errorf("relativeURL with query is not supported")
 	}
 
-	if relativeUrl.Fragment != "" {
-		return "", fmt.Errorf("relativeUrl with fragment is not supported")
+	if relativeURL.Fragment != "" {
+		return "", fmt.Errorf("relativeURL with fragment is not supported")
 	}
 
-	baseUrl.Path = path.Join(baseUrl.Path, relativePath)
-	return baseUrl.String(), nil
+	baseURL.Path = path.Join(baseURL.Path, relativePath)
+	return baseURL.String(), nil
 }

@@ -1,13 +1,13 @@
 package restresourcehandler
 
-type RestResourceHandlerConfig struct {
+type Config struct {
 	RemoteErrorExtractor RemoteErrorExtractor
 	ResourceEncoding     string
 	DataPropertyName     string
 	IsDataWrapped        bool
 }
 
-func validateRestResourceHandlerConfig(config RestResourceHandlerConfig) {
+func validateRestResourceHandlerConfig(config Config) {
 	if config.IsDataWrapped && config.DataPropertyName == "" {
 		panic("IsDataWrapped is set, but DataPropertyName has not been given.")
 	}

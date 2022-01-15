@@ -14,12 +14,12 @@ type RestResourceHandler interface {
 }
 
 type restResourceHandler struct {
-	HttpClient  *http.Client
-	Config      RestResourceHandlerConfig
+	HTTPClient  *http.Client
+	Config      Config
 	ResourceURL url.URL
 }
 
-func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config RestResourceHandlerConfig) RestResourceHandler {
+func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) RestResourceHandler {
 	validateRestResourceHandlerConfig(config)
 
 	url, err := url.Parse(resourceURL)
@@ -33,7 +33,7 @@ func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config 
 
 	handler := restResourceHandler{
 		Config:      config,
-		HttpClient:  httpClient,
+		HTTPClient:  httpClient,
 		ResourceURL: *url,
 	}
 
@@ -42,8 +42,8 @@ func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config 
 
 func (c *restResourceHandler) Fetch(id string, params map[string]string, response interface{}) error {
 	return c.request(requestParams{
-		HttpMethod:     http.MethodGet,
-		ResourceId:     id,
+		HTTPMethod:     http.MethodGet,
+		ResourceID:     id,
 		QueryParams:    params,
 		Response:       response,
 		ExpectedStatus: http.StatusOK,
@@ -52,8 +52,8 @@ func (c *restResourceHandler) Fetch(id string, params map[string]string, respons
 
 func (c *restResourceHandler) Delete(id string, params map[string]string) error {
 	return c.request(requestParams{
-		HttpMethod:       http.MethodDelete,
-		ResourceId:       id,
+		HTTPMethod:       http.MethodDelete,
+		ResourceID:       id,
 		QueryParams:      params,
 		DoDiscardContent: true,
 		ExpectedStatus:   http.StatusNoContent,
@@ -62,8 +62,8 @@ func (c *restResourceHandler) Delete(id string, params map[string]string) error 
 
 func (c *restResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
 	return c.request(requestParams{
-		HttpMethod:          http.MethodPost,
-		DoDiscardResourceId: true,
+		HTTPMethod:          http.MethodPost,
+		DoDiscardResourceID: true,
 		Resource:            resourceToCreate,
 		Response:            response,
 		ExpectedStatus:      http.StatusCreated,
@@ -74,10 +74,10 @@ func (c *restResourceHandler) request(params requestParams) error {
 	validateRequestParameters(params)
 
 	var id *string
-	if !params.DoDiscardResourceId {
-		id = &params.ResourceId
+	if !params.DoDiscardResourceID {
+		id = &params.ResourceID
 	}
-	req, err := createRequest(c.Config, c.ResourceURL, params.HttpMethod, id, params.QueryParams, params.Resource)
+	req, err := createRequest(c.Config, c.ResourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (c *restResourceHandler) request(params requestParams) error {
 		req.Header.Add("Content-Type", c.Config.ResourceEncoding)
 	}
 
-	resp, err := c.HttpClient.Do(req)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

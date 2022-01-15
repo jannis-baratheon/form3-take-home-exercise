@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	someValidUuid      = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
-	someOtherValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
-	accountsUrl        = "/organisation/accounts"
+	someValidUUID      = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+	someOtherValidUUID = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+	accountsURL        = "/organisation/accounts"
 )
 
 type wrapper struct {
@@ -26,20 +26,20 @@ type remoteError struct {
 
 type apiCall func(client form3apiclient.Form3ApiClient) (interface{}, error)
 
-var exampleValidApiCalls = map[string]apiCall{
+var exampleValidAPICalls = map[string]apiCall{
 	"accounts get": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(someValidUuid)
+		return client.Accounts().Get(someValidUUID)
 	},
 	"accounts delete": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(someValidUuid)
+		return client.Accounts().Get(someValidUUID)
 	},
 	"accounts create": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
 		return client.Accounts().Create(form3apiclient.AccountData{})
 	},
 }
 
-func forEachExampleValidApiCall(consumer func(string, apiCall)) {
-	for reqName, req := range exampleValidApiCalls {
+func forEachExampleValidAPICall(consumer func(string, apiCall)) {
+	for reqName, req := range exampleValidAPICalls {
 		consumer(reqName, req)
 	}
 }
@@ -61,11 +61,11 @@ var _ = Describe("Form3ApiClient", func() {
 
 	Context("on happy-path", func() {
 		It("gets account", func() {
-			expectedData := someValidAccountData(someValidUuid)
+			expectedData := someValidAccountData(someValidUUID)
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", accountsUrl+"/"+expectedData.ID),
+					ghttp.VerifyRequest("GET", accountsURL+"/"+expectedData.ID),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, wrapper{expectedData})))
 
@@ -76,25 +76,25 @@ var _ = Describe("Form3ApiClient", func() {
 		})
 
 		It("deletes account", func() {
-			accountId := someValidUuid
+			accountID := someValidUUID
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("DELETE", accountsUrl+"/"+accountId, "version=100"),
+					ghttp.VerifyRequest("DELETE", accountsURL+"/"+accountID, "version=100"),
 					ghttp.RespondWith(http.StatusNoContent, nil)))
 
-			err := client.Accounts().Delete(accountId, 100)
+			err := client.Accounts().Delete(accountID, 100)
 
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("creates account", func() {
-			requestData := someValidAccountData(someValidUuid)
-			expectedData := someValidAccountData(someOtherValidUuid)
+			requestData := someValidAccountData(someValidUUID)
+			expectedData := someValidAccountData(someOtherValidUUID)
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("POST", accountsUrl),
+					ghttp.VerifyRequest("POST", accountsURL),
 					ghttp.VerifyContentType(resourceEncoding),
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.VerifyJSONRepresenting(wrapper{requestData}),
@@ -118,7 +118,7 @@ var _ = Describe("Form3ApiClient", func() {
 						ghttp.RespondWithJSONEncoded(expectedErrorStatus, remoteError{expectedRemoteErrorMessage})))
 			})
 
-			forEachExampleValidApiCall(func(callName string, call apiCall) {
+			forEachExampleValidAPICall(func(callName string, call apiCall) {
 				It(fmt.Sprintf(`includes server message in returned error for "%s" call`, callName), func() {
 					_, err := call(client)
 
@@ -143,7 +143,7 @@ var _ = Describe("Form3ApiClient", func() {
 						ghttp.RespondWith(expectedErrorStatus, nil)))
 			})
 
-			forEachExampleValidApiCall(func(callName string, call apiCall) {
+			forEachExampleValidAPICall(func(callName string, call apiCall) {
 				It(fmt.Sprintf(`does not include the server message part in returned error for "%s" call`, callName), func() {
 					_, err := call(client)
 

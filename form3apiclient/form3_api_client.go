@@ -21,7 +21,7 @@ type form3ApiClient struct {
 	AccountsEndpoint Accounts
 }
 
-var config = restresourcehandler.RestResourceHandlerConfig{
+var config = restresourcehandler.Config{
 	ResourceEncoding:     "application/json; charset=utf-8",
 	IsDataWrapped:        true,
 	DataPropertyName:     "data",
@@ -55,8 +55,8 @@ func extractRemoteError(response *http.Response) error {
 		remoteError.ErrorMessage)
 }
 
-func NewForm3APIClient(apiUrl string, httpClient *http.Client) Form3ApiClient {
-	accounts, err := newAccounts(apiUrl, httpClient)
+func NewForm3APIClient(apiURL string, httpClient *http.Client) Form3ApiClient {
+	accounts, err := newAccounts(apiURL, httpClient)
 	if err != nil {
 		panic(err)
 	}

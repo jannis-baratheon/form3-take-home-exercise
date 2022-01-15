@@ -5,7 +5,7 @@ import "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
 func someValidAccountData(id string) form3apiclient.AccountData {
 	return form3apiclient.AccountData{
 		ID:             id,
-		OrganisationID: someValidUuid,
+		OrganisationID: someValidUUID,
 		Type:           "accounts",
 		Attributes: form3apiclient.AccountAttributes{
 			AccountClassification: "Personal",

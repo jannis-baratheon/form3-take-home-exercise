@@ -48,13 +48,13 @@ type accounts struct {
 
 const resourcePath = "organisation/accounts"
 
-func newAccounts(apiUrl string, httpClient *http.Client) (Accounts, error) {
-	accountsResourceUrl, err := join(apiUrl, resourcePath)
+func newAccounts(apiURL string, httpClient *http.Client) (Accounts, error) {
+	accountsResourceURL, err := join(apiURL, resourcePath)
 	if err != nil {
 		return nil, err
 	}
 
-	handler := restresourcehandler.NewRestResourceHandler(httpClient, accountsResourceUrl, config)
+	handler := restresourcehandler.NewRestResourceHandler(httpClient, accountsResourceURL, config)
 
 	return &accounts{handler}, nil
 }

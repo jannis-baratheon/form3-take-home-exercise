@@ -26,7 +26,7 @@ type apiError struct {
 
 type apiCall func(client restresourcehandler.RestResourceHandler) error
 
-var exampleValidApiCalls = map[string]apiCall{
+var exampleValidAPICalls = map[string]apiCall{
 	"fetch": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
 		return client.Fetch("1", map[string]string{"attrs": "name"}, &response)
@@ -40,8 +40,8 @@ var exampleValidApiCalls = map[string]apiCall{
 	},
 }
 
-func forEachExampleValidApiCall(consumer func(string, apiCall)) {
-	for callName, call := range exampleValidApiCalls {
+func forEachExampleValidAPICall(consumer func(string, apiCall)) {
+	for callName, call := range exampleValidAPICalls {
 		consumer(callName, call)
 	}
 }
@@ -71,7 +71,7 @@ var _ = Describe("RestResourceHandler", func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
 				url,
-				restresourcehandler.RestResourceHandlerConfig{
+				restresourcehandler.Config{
 					IsDataWrapped:    true,
 					DataPropertyName: "data",
 					ResourceEncoding: resourceEncoding,
@@ -132,7 +132,7 @@ var _ = Describe("RestResourceHandler", func() {
 			client = restresourcehandler.NewRestResourceHandler(
 				httpClient,
 				url,
-				restresourcehandler.RestResourceHandlerConfig{
+				restresourcehandler.Config{
 					ResourceEncoding: resourceEncoding,
 				})
 			server.AppendHandlers(
@@ -140,7 +140,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWith(http.StatusInternalServerError, nil)))
 		})
 
-		forEachExampleValidApiCall(func(reqName string, req apiCall) {
+		forEachExampleValidAPICall(func(reqName string, req apiCall) {
 			It(fmt.Sprintf(`provides default error during "%s" call`, reqName), func() {
 				err := req(client)
 
@@ -158,7 +158,7 @@ var _ = Describe("RestResourceHandler", func() {
 				client = restresourcehandler.NewRestResourceHandler(
 					httpClient,
 					url,
-					restresourcehandler.RestResourceHandlerConfig{
+					restresourcehandler.Config{
 						ResourceEncoding: resourceEncoding,
 						RemoteErrorExtractor: func(response *http.Response) error {
 							return customError
@@ -166,7 +166,7 @@ var _ = Describe("RestResourceHandler", func() {
 					})
 			})
 
-			forEachExampleValidApiCall(func(reqName string, req apiCall) {
+			forEachExampleValidAPICall(func(reqName string, req apiCall) {
 				It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
@@ -186,7 +186,7 @@ var _ = Describe("RestResourceHandler", func() {
 				client = restresourcehandler.NewRestResourceHandler(
 					httpClient,
 					url,
-					restresourcehandler.RestResourceHandlerConfig{
+					restresourcehandler.Config{
 						ResourceEncoding: resourceEncoding,
 						RemoteErrorExtractor: func(response *http.Response) error {
 							respPayload, err := ioutil.ReadAll(response.Body)
@@ -206,7 +206,7 @@ var _ = Describe("RestResourceHandler", func() {
 					})
 			})
 
-			forEachExampleValidApiCall(func(reqName string, req apiCall) {
+			forEachExampleValidAPICall(func(reqName string, req apiCall) {
 				It(fmt.Sprintf(`reports custom remote error during "%s" call`, reqName), func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(

@@ -7,8 +7,8 @@ import (
 
 func someValidRequestParams() requestParams {
 	return requestParams{
-		HttpMethod:          "GET",
-		DoDiscardResourceId: true,
+		HTTPMethod:          "GET",
+		DoDiscardResourceID: true,
 		DoDiscardContent:    true,
 	}
 }
@@ -17,17 +17,17 @@ var _ = Describe("requestParams", func() {
 	Context("panics during validation", func() {
 		It("when invalid http method has not been set", func() {
 			params := someValidRequestParams()
-			params.HttpMethod = "UNKNOWN_METHOD"
+			params.HTTPMethod = "UNKNOWN_METHOD"
 
 			Expect(func() { validateRequestParameters(params) }).To(PanicWith(`Unknown HTTP method "UNKNOWN_METHOD".`))
 		})
 
 		It("when resource id has not been set and it shall not be discarded", func() {
 			params := someValidRequestParams()
-			params.DoDiscardResourceId = false
-			params.ResourceId = ""
+			params.DoDiscardResourceID = false
+			params.ResourceID = ""
 
-			Expect(func() { validateRequestParameters(params) }).To(PanicWith("Invalid request parameters: ResourceId is empty, but DoDiscardResourceId is not set."))
+			Expect(func() { validateRequestParameters(params) }).To(PanicWith("Invalid request parameters: ResourceID is empty, but DoDiscardResourceID is not set."))
 		})
 
 		It("when response content placeholder has not been set and it shall not be discarded", func() {

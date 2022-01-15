@@ -6,28 +6,28 @@ import (
 )
 
 type requestParams struct {
-	HttpMethod          string
+	HTTPMethod          string
 	ExpectedStatus      int
 	DoDiscardContent    bool
-	DoDiscardResourceId bool
-	ResourceId          string
+	DoDiscardResourceID bool
+	ResourceID          string
 	QueryParams         map[string]string
 	Resource            interface{}
 	Response            interface{}
 }
 
 func validateRequestParameters(params requestParams) {
-	if !params.DoDiscardResourceId && params.ResourceId == "" {
-		panic("Invalid request parameters: ResourceId is empty, but DoDiscardResourceId is not set.")
+	if !params.DoDiscardResourceID && params.ResourceID == "" {
+		panic("Invalid request parameters: ResourceID is empty, but DoDiscardResourceID is not set.")
 	}
 
 	if !params.DoDiscardContent && params.Response == nil {
 		panic("Invalid request parameters: Response is null, but DoDiscardContent is not set.")
 	}
 
-	switch params.HttpMethod {
+	switch params.HTTPMethod {
 	case http.MethodGet, http.MethodDelete, http.MethodPost:
 	default:
-		panic(fmt.Sprintf(`Unknown HTTP method "%s".`, params.HttpMethod))
+		panic(fmt.Sprintf(`Unknown HTTP method "%s".`, params.HTTPMethod))
 	}
 }

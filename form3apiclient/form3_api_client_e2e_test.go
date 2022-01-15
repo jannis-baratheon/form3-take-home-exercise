@@ -17,7 +17,7 @@ import (
 var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func() {
 	var accounts form3apiclient.Accounts
 	var createdResources []form3apiclient.AccountData
-	var apiUrl string
+	var apiURL string
 
 	createAndScheduleCleanup := func(accountData form3apiclient.AccountData) (form3apiclient.AccountData, error) {
 		res, err := accounts.Create(accountData)
@@ -31,16 +31,16 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 
 	cleanup := func() {
 		httpClient := &http.Client{}
-		resourceBaseUrl, err := url.Parse(apiUrl)
+		resourceBaseURL, err := url.Parse(apiURL)
 		if err != nil {
 			panic("api url is not a valid url")
 		}
-		resourceBaseUrl.Path = path.Join(resourceBaseUrl.Path, "/organisation/accounts")
+		resourceBaseURL.Path = path.Join(resourceBaseURL.Path, "/organisation/accounts")
 
 		for _, resource := range createdResources {
 			deleteRequest, err := http.NewRequest(
 				http.MethodDelete,
-				fmt.Sprintf("%s/%s?version=%d", resourceBaseUrl.String(), resource.ID, resource.Version),
+				fmt.Sprintf("%s/%s?version=%d", resourceBaseURL.String(), resource.ID, resource.Version),
 				nil)
 			if err != nil {
 				log.Println(fmt.Sprintf(`WARNING: Failed to cleanup AccountData resource after test. Error: "%v"`, err))
@@ -56,12 +56,12 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 	}
 
 	BeforeEach(func() {
-		apiUrl = os.Getenv("FORM3_API_URL")
+		apiURL = os.Getenv("FORM3_API_URL")
 
-		if apiUrl == "" {
+		if apiURL == "" {
 			panic("FORM3_API_URL has to be set")
 		}
-		accounts = form3apiclient.NewForm3APIClient(apiUrl, &http.Client{}).Accounts()
+		accounts = form3apiclient.NewForm3APIClient(apiURL, &http.Client{}).Accounts()
 
 		DeferCleanup(cleanup)
 	})

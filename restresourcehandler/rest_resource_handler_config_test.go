@@ -5,8 +5,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func someValidRestResourceHandlerConfig() RestResourceHandlerConfig {
-	return RestResourceHandlerConfig{
+func someValidRestResourceHandlerConfig() Config {
+	return Config{
 		ResourceEncoding: "some encoding",
 	}
 }
