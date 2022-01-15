@@ -2,8 +2,9 @@ package form3apiclient
 
 import (
 	"fmt"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	"net/http"
+
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 )
 
 // Account represents an account in the form3 org section.
@@ -49,7 +50,6 @@ const resourcePath = "organisation/accounts"
 
 func newAccounts(apiUrl string, httpClient *http.Client) (Accounts, error) {
 	accountsResourceUrl, err := join(apiUrl, resourcePath)
-
 	if err != nil {
 		return nil, err
 	}

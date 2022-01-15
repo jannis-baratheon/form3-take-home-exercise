@@ -2,16 +2,19 @@ package form3apiclient_test
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"net/http"
 )
 
-const someValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
-const someOtherValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
-const accountsUrl = "/organisation/accounts"
+const (
+	someValidUuid      = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+	someOtherValidUuid = "ad27e265-9605-4b4b-a0e5-3003ea9cc422"
+	accountsUrl        = "/organisation/accounts"
+)
 
 type wrapper struct {
 	AccountData form3apiclient.AccountData `json:"data"`

@@ -2,15 +2,16 @@ package form3apiclient_test
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
+
+	"github.com/google/uuid"
+	"github.com/jannis-baratheon/Form3-take-home-excercise/form3apiclient"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func() {
@@ -31,7 +32,6 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 	cleanup := func() {
 		httpClient := &http.Client{}
 		resourceBaseUrl, err := url.Parse(apiUrl)
-
 		if err != nil {
 			panic("api url is not a valid url")
 		}
@@ -42,7 +42,6 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 				http.MethodDelete,
 				fmt.Sprintf("%s/%s?version=%d", resourceBaseUrl.String(), resource.ID, resource.Version),
 				nil)
-
 			if err != nil {
 				log.Println(fmt.Sprintf(`WARNING: Failed to cleanup AccountData resource after test. Error: "%v"`, err))
 				continue

@@ -3,12 +3,13 @@ package restresourcehandler_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"io/ioutil"
-	"net/http"
 )
 
 type person struct {
@@ -189,7 +190,6 @@ var _ = Describe("RestResourceHandler", func() {
 						ResourceEncoding: resourceEncoding,
 						RemoteErrorExtractor: func(response *http.Response) error {
 							respPayload, err := ioutil.ReadAll(response.Body)
-
 							if err != nil {
 								return err
 							}

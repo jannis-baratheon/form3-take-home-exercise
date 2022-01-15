@@ -46,7 +46,8 @@ func (c *restResourceHandler) Fetch(id string, params map[string]string, respons
 		ResourceId:     id,
 		QueryParams:    params,
 		Response:       response,
-		ExpectedStatus: http.StatusOK})
+		ExpectedStatus: http.StatusOK,
+	})
 }
 
 func (c *restResourceHandler) Delete(id string, params map[string]string) error {
@@ -55,7 +56,8 @@ func (c *restResourceHandler) Delete(id string, params map[string]string) error 
 		ResourceId:       id,
 		QueryParams:      params,
 		DoDiscardContent: true,
-		ExpectedStatus:   http.StatusNoContent})
+		ExpectedStatus:   http.StatusNoContent,
+	})
 }
 
 func (c *restResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
@@ -64,7 +66,8 @@ func (c *restResourceHandler) Create(resourceToCreate interface{}, response inte
 		DoDiscardResourceId: true,
 		Resource:            resourceToCreate,
 		Response:            response,
-		ExpectedStatus:      http.StatusCreated})
+		ExpectedStatus:      http.StatusCreated,
+	})
 }
 
 func (c *restResourceHandler) request(params requestParams) error {
@@ -75,7 +78,6 @@ func (c *restResourceHandler) request(params requestParams) error {
 		id = &params.ResourceId
 	}
 	req, err := createRequest(c.Config, c.ResourceURL, params.HttpMethod, id, params.QueryParams, params.Resource)
-
 	if err != nil {
 		return err
 	}

@@ -2,12 +2,15 @@ package form3apiclient
 
 import (
 	"fmt"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-const someValidRelativePath = "some/path"
-const someValidAbsolutePath = "http://example.com"
+const (
+	someValidRelativePath = "some/path"
+	someValidAbsolutePath = "http://example.com"
+)
 
 var _ = Describe("util", func() {
 	Context("join() function", func() {

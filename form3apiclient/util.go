@@ -8,7 +8,6 @@ import (
 
 func join(baseAbsoluteUrl string, relativePath string) (string, error) {
 	baseUrl, err := url.Parse(baseAbsoluteUrl)
-
 	if err != nil {
 		return "", err
 	}
@@ -26,7 +25,6 @@ func join(baseAbsoluteUrl string, relativePath string) (string, error) {
 	}
 
 	relativeUrl, err := url.Parse(relativePath)
-
 	if err != nil {
 		return "", err
 	}

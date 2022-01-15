@@ -43,7 +43,6 @@ func createRequest(config RestResourceHandlerConfig, resourceUrl url.URL, method
 
 func readResponse(config RestResourceHandlerConfig, reader io.Reader, response interface{}) error {
 	respPayload, err := ioutil.ReadAll(reader)
-
 	if err != nil {
 		return err
 	}
@@ -64,7 +63,6 @@ func readResponse(config RestResourceHandlerConfig, reader io.Reader, response i
 
 func readerForResource(config RestResourceHandlerConfig, resource interface{}) (io.Reader, error) {
 	payload, err := json.Marshal(resource)
-
 	if err != nil {
 		return nil, err
 	}

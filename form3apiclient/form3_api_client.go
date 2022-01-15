@@ -3,9 +3,10 @@ package form3apiclient
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/jannis-baratheon/Form3-take-home-excercise/restresourcehandler"
 )
 
 type form3APIRemoteError struct {
@@ -56,7 +57,6 @@ func extractRemoteError(response *http.Response) error {
 
 func NewForm3APIClient(apiUrl string, httpClient *http.Client) Form3ApiClient {
 	accounts, err := newAccounts(apiUrl, httpClient)
-
 	if err != nil {
 		panic(err)
 	}
