@@ -77,6 +77,7 @@ func (c *restResourceHandler) request(params requestParams) error {
 	if !params.DoDiscardResourceID {
 		id = &params.ResourceID
 	}
+
 	req, err := createRequest(c.Config, c.ResourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
 	if err != nil {
 		return err
@@ -100,6 +101,7 @@ func (c *restResourceHandler) request(params requestParams) error {
 		if c.Config.RemoteErrorExtractor == nil {
 			return defaultRemoteErrorExtractor(resp)
 		}
+
 		return c.Config.RemoteErrorExtractor(resp)
 	}
 

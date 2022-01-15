@@ -30,6 +30,7 @@ var config = restresourcehandler.Config{
 
 func extractRemoteError(response *http.Response) error {
 	respPayload, err := ioutil.ReadAll(response.Body)
+
 	if response.ContentLength == 0 {
 		return fmt.Errorf(
 			`api responded with error: http status code %d, http status "%s"`,

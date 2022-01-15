@@ -38,5 +38,6 @@ func join(baseAbsoluteURL string, relativePath string) (string, error) {
 	}
 
 	baseURL.Path = path.Join(baseURL.Path, relativePath)
+
 	return baseURL.String(), nil
 }

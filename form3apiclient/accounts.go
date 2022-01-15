@@ -62,6 +62,7 @@ func newAccounts(apiURL string, httpClient *http.Client) (Accounts, error) {
 func (a *accounts) Get(id string) (AccountData, error) {
 	var accountData AccountData
 	err := a.Handler.Fetch(id, nil, &accountData)
+
 	return accountData, err
 }
 
@@ -72,5 +73,6 @@ func (a *accounts) Delete(id string, version int64) error {
 func (a *accounts) Create(accountData AccountData) (AccountData, error) {
 	var response AccountData
 	err := a.Handler.Create(&accountData, &response)
+
 	return response, err
 }

@@ -27,7 +27,8 @@ var _ = Describe("requestParams", func() {
 			params.DoDiscardResourceID = false
 			params.ResourceID = ""
 
-			Expect(func() { validateRequestParameters(params) }).To(PanicWith("Invalid request parameters: ResourceID is empty, but DoDiscardResourceID is not set."))
+			Expect(func() { validateRequestParameters(params) }).
+				To(PanicWith("Invalid request parameters: ResourceID is empty, but DoDiscardResourceID is not set."))
 		})
 
 		It("when response content placeholder has not been set and it shall not be discarded", func() {
@@ -35,7 +36,8 @@ var _ = Describe("requestParams", func() {
 			params.DoDiscardContent = false
 			params.Response = nil
 
-			Expect(func() { validateRequestParameters(params) }).To(PanicWith("Invalid request parameters: Response is null, but DoDiscardContent is not set."))
+			Expect(func() { validateRequestParameters(params) }).
+				To(PanicWith("Invalid request parameters: Response is null, but DoDiscardContent is not set."))
 		})
 	})
 })

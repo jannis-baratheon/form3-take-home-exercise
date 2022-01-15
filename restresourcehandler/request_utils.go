@@ -15,30 +15,39 @@ func defaultRemoteErrorExtractor(response *http.Response) error {
 	return fmt.Errorf(`remote server returned error status: %d`, response.StatusCode)
 }
 
-func createRequest(config Config, resourceUrl url.URL, method string, id *string, queryParams map[string]string, resource interface{}) (*http.Request, error) {
+func createRequest(
+	config Config,
+	resourceURL url.URL,
+	method string,
+	id *string,
+	queryParams map[string]string,
+	resource interface{}) (*http.Request, error) {
 	// append id
 	if id != nil {
-		resourceUrl.Path = path.Join(resourceUrl.Path, *id)
+		resourceURL.Path = path.Join(resourceURL.Path, *id)
 	}
 
 	if queryParams != nil {
-		query := resourceUrl.Query()
+		query := resourceURL.Query()
 		for key, val := range queryParams {
 			query.Add(key, val)
 		}
-		resourceUrl.RawQuery = query.Encode()
+
+		resourceURL.RawQuery = query.Encode()
 	}
 
 	var body io.Reader
+
 	if resource != nil {
 		var err error
 		body, err = readerForResource(config, resource)
+
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return http.NewRequest(method, resourceUrl.String(), body)
+	return http.NewRequest(method, resourceURL.String(), body)
 }
 
 func readResponse(config Config, reader io.Reader, response interface{}) error {

@@ -29,6 +29,7 @@ type apiCall func(client restresourcehandler.RestResourceHandler) error
 var exampleValidAPICalls = map[string]apiCall{
 	"fetch": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
+
 		return client.Fetch("1", map[string]string{"attrs": "name"}, &response)
 	},
 	"delete": func(client restresourcehandler.RestResourceHandler) error {
@@ -36,6 +37,7 @@ var exampleValidAPICalls = map[string]apiCall{
 	},
 	"create": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
+
 		return client.Create(person{"Smith"}, &response)
 	},
 }
