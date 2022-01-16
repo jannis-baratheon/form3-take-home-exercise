@@ -12,19 +12,17 @@ type form3APIRemoteError struct {
 	ErrorMessage string `json:"error_message"`
 }
 
-type Form3ApiClient interface {
-	Accounts() *accounts
+type Form3ApiClient struct {
+	accountsEndpoint *accounts
 }
 
-type form3ApiClient struct {
-	AccountsEndpoint *accounts
-}
-
-var config = restresourcehandler.Config{
-	ResourceEncoding:     "application/json; charset=utf-8",
-	IsDataWrapped:        true,
-	DataPropertyName:     "data",
-	RemoteErrorExtractor: extractRemoteError,
+func getRestResourceHandlerConfig() restresourcehandler.Config {
+	return restresourcehandler.Config{
+		ResourceEncoding:     "application/json; charset=utf-8",
+		IsDataWrapped:        true,
+		DataPropertyName:     "data",
+		RemoteErrorExtractor: extractRemoteError,
+	}
 }
 
 func extractRemoteError(response *http.Response) error {
@@ -47,15 +45,15 @@ func extractRemoteError(response *http.Response) error {
 	return RemoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage)
 }
 
-func NewForm3APIClient(apiURL string, httpClient *http.Client) *form3ApiClient {
+func NewForm3APIClient(apiURL string, httpClient *http.Client) *Form3ApiClient {
 	accounts, err := newAccounts(apiURL, httpClient)
 	if err != nil {
 		panic(err)
 	}
 
-	return &form3ApiClient{AccountsEndpoint: accounts}
+	return &Form3ApiClient{accountsEndpoint: accounts}
 }
 
-func (c *form3ApiClient) Accounts() *accounts {
-	return c.AccountsEndpoint
+func (c *Form3ApiClient) Accounts() *accounts {
+	return c.accountsEndpoint
 }

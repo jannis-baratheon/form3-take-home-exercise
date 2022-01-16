@@ -43,7 +43,7 @@ type Accounts interface {
 }
 
 type accounts struct {
-	Handler restresourcehandler.RestResourceHandler
+	Handler *restresourcehandler.RestResourceHandler
 }
 
 const resourcePath = "organisation/accounts"
@@ -54,7 +54,8 @@ func newAccounts(apiURL string, httpClient *http.Client) (*accounts, error) {
 		return nil, WrapError(err, "constructing api url")
 	}
 
-	handler := restresourcehandler.NewRestResourceHandler(httpClient, accountsResourceURL, config)
+	handler := restresourcehandler.NewRestResourceHandler(
+		httpClient, accountsResourceURL, getRestResourceHandlerConfig())
 
 	return &accounts{handler}, nil
 }

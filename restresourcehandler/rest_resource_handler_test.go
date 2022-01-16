@@ -24,26 +24,28 @@ type apiError struct {
 	ErrorMessage string `json:"error_message"`
 }
 
-type apiCall func(client restresourcehandler.RestResourceHandler) error
+type apiCall func(client *restresourcehandler.RestResourceHandler) error
 
-var exampleValidAPICalls = map[string]apiCall{
-	"fetch": func(client restresourcehandler.RestResourceHandler) error {
-		var response person
+func getExampleValidAPICalls() map[string]apiCall {
+	return map[string]apiCall{
+		"fetch": func(client *restresourcehandler.RestResourceHandler) error {
+			var response person
 
-		return client.Fetch("1", map[string]string{"attrs": "name"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
-	},
-	"delete": func(client restresourcehandler.RestResourceHandler) error {
-		return client.Delete("1", map[string]string{"version": "1"}) //nolint:wrapcheck // we need this error unwrapped
-	},
-	"create": func(client restresourcehandler.RestResourceHandler) error {
-		var response person
+			return client.Fetch("1", map[string]string{"attrs": "name"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
+		},
+		"delete": func(client *restresourcehandler.RestResourceHandler) error {
+			return client.Delete("1", map[string]string{"version": "1"}) //nolint:wrapcheck // we need this error unwrapped
+		},
+		"create": func(client *restresourcehandler.RestResourceHandler) error {
+			var response person
 
-		return client.Create(person{"Smith"}, &response) //nolint:wrapcheck // we need this error unwrapped
-	},
+			return client.Create(person{"Smith"}, &response) //nolint:wrapcheck // we need this error unwrapped
+		},
+	}
 }
 
 func forEachExampleValidAPICall(consumer func(string, apiCall)) {
-	for callName, call := range exampleValidAPICalls {
+	for callName, call := range getExampleValidAPICalls() {
 		consumer(callName, call)
 	}
 }
@@ -67,7 +69,7 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("on happy-path", func() {
-		var client restresourcehandler.RestResourceHandler
+		var client *restresourcehandler.RestResourceHandler
 
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
@@ -128,7 +130,7 @@ var _ = Describe("RestResourceHandler", func() {
 	})
 
 	Context("with default remote error extractor", func() {
-		var client restresourcehandler.RestResourceHandler
+		var client *restresourcehandler.RestResourceHandler
 
 		BeforeEach(func() {
 			client = restresourcehandler.NewRestResourceHandler(
@@ -153,7 +155,7 @@ var _ = Describe("RestResourceHandler", func() {
 
 	Context("with custom remote error extractor", func() {
 		Context("providing error not based on response content", func() {
-			var client restresourcehandler.RestResourceHandler
+			var client *restresourcehandler.RestResourceHandler
 			customError := fmt.Errorf("some custom error") //nolint:goerr113 // not a problem here
 
 			BeforeEach(func() {
@@ -182,7 +184,7 @@ var _ = Describe("RestResourceHandler", func() {
 		})
 
 		Context("providing error based on response content", func() {
-			var client restresourcehandler.RestResourceHandler
+			var client *restresourcehandler.RestResourceHandler
 
 			BeforeEach(func() {
 				client = restresourcehandler.NewRestResourceHandler(

@@ -7,19 +7,13 @@ import (
 
 type RemoteErrorExtractor func(response *http.Response) error
 
-type RestResourceHandler interface {
-	Fetch(id string, params map[string]string, response interface{}) error
-	Delete(id string, params map[string]string) error
-	Create(resourceToCreate interface{}, response interface{}) error
+type RestResourceHandler struct {
+	client      *http.Client
+	config      Config
+	resourceURL url.URL
 }
 
-type restResourceHandler struct {
-	HTTPClient  *http.Client
-	Config      Config
-	ResourceURL url.URL
-}
-
-func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) *restResourceHandler {
+func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) *RestResourceHandler {
 	validateRestResourceHandlerConfig(config)
 
 	url, err := url.Parse(resourceURL)
@@ -31,16 +25,16 @@ func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config 
 		panic("resource url must be absolute")
 	}
 
-	handler := restResourceHandler{
-		Config:      config,
-		HTTPClient:  httpClient,
-		ResourceURL: *url,
+	handler := RestResourceHandler{
+		config:      config,
+		client:      httpClient,
+		resourceURL: *url,
 	}
 
 	return &handler
 }
 
-func (c *restResourceHandler) Fetch(id string, params map[string]string, response interface{}) error {
+func (c *RestResourceHandler) Fetch(id string, params map[string]string, response interface{}) error {
 	return c.request(requestParams{
 		HTTPMethod:     http.MethodGet,
 		ResourceID:     id,
@@ -50,7 +44,7 @@ func (c *restResourceHandler) Fetch(id string, params map[string]string, respons
 	})
 }
 
-func (c *restResourceHandler) Delete(id string, params map[string]string) error {
+func (c *RestResourceHandler) Delete(id string, params map[string]string) error {
 	return c.request(requestParams{
 		HTTPMethod:       http.MethodDelete,
 		ResourceID:       id,
@@ -60,7 +54,7 @@ func (c *restResourceHandler) Delete(id string, params map[string]string) error 
 	})
 }
 
-func (c *restResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
+func (c *RestResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
 	return c.request(requestParams{
 		HTTPMethod:          http.MethodPost,
 		DoDiscardResourceID: true,
@@ -70,7 +64,7 @@ func (c *restResourceHandler) Create(resourceToCreate interface{}, response inte
 	})
 }
 
-func (c *restResourceHandler) request(params requestParams) error {
+func (c *RestResourceHandler) request(params requestParams) error {
 	validateRequestParameters(params)
 
 	var id *string
@@ -78,36 +72,36 @@ func (c *restResourceHandler) request(params requestParams) error {
 		id = &params.ResourceID
 	}
 
-	req, err := createRequest(c.Config, c.ResourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
+	req, err := createRequest(c.config, c.resourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
 	if err != nil {
 		return err
 	}
 
 	if !params.DoDiscardContent {
-		req.Header.Add("Accept", c.Config.ResourceEncoding)
+		req.Header.Add("Accept", c.config.ResourceEncoding)
 	}
 
 	if params.Resource != nil {
-		req.Header.Add("Content-Type", c.Config.ResourceEncoding)
+		req.Header.Add("Content-Type", c.config.ResourceEncoding)
 	}
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return WrapError(err, "executing http request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != params.ExpectedStatus {
-		if c.Config.RemoteErrorExtractor == nil {
+		if c.config.RemoteErrorExtractor == nil {
 			return defaultRemoteErrorExtractor(resp)
 		}
 
-		return c.Config.RemoteErrorExtractor(resp)
+		return c.config.RemoteErrorExtractor(resp)
 	}
 
 	if params.DoDiscardContent {
 		return nil
 	}
 
-	return readResponse(c.Config, resp.Body, params.Response)
+	return readResponse(c.config, resp.Body, params.Response)
 }

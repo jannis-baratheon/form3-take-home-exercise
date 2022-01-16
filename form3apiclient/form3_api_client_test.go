@@ -24,33 +24,35 @@ type remoteError struct {
 	Message string `json:"error_message"`
 }
 
-type apiCall func(client form3apiclient.Form3ApiClient) error
+type apiCall func(client *form3apiclient.Form3ApiClient) error
 
-var exampleValidAPICalls = map[string]apiCall{
-	"accounts get": func(client form3apiclient.Form3ApiClient) error {
-		_, err := client.Accounts().Get(someValidUUID)
+func getExampleValidAPICalls() map[string]apiCall {
+	return map[string]apiCall{
+		"accounts get": func(client *form3apiclient.Form3ApiClient) error {
+			_, err := client.Accounts().Get(someValidUUID)
 
-		return err //nolint:wrapcheck // we need this error unwrapped
-	},
-	"accounts delete": func(client form3apiclient.Form3ApiClient) error {
-		return client.Accounts().Delete(someValidUUID, 0) //nolint:wrapcheck // we need this error unwrapped
-	},
-	"accounts create": func(client form3apiclient.Form3ApiClient) error {
-		_, err := client.Accounts().Create(form3apiclient.AccountData{})
+			return err //nolint:wrapcheck // we need this error unwrapped
+		},
+		"accounts delete": func(client *form3apiclient.Form3ApiClient) error {
+			return client.Accounts().Delete(someValidUUID, 0) //nolint:wrapcheck // we need this error unwrapped
+		},
+		"accounts create": func(client *form3apiclient.Form3ApiClient) error {
+			_, err := client.Accounts().Create(form3apiclient.AccountData{})
 
-		return err //nolint:wrapcheck // we need this error unwrapped
-	},
+			return err //nolint:wrapcheck // we need this error unwrapped
+		},
+	}
 }
 
 func forEachExampleValidAPICall(consumer func(string, apiCall)) {
-	for reqName, req := range exampleValidAPICalls {
+	for reqName, req := range getExampleValidAPICalls() {
 		consumer(reqName, req)
 	}
 }
 
 var _ = Describe("Form3ApiClient", func() {
 	var server *ghttp.Server
-	var client form3apiclient.Form3ApiClient
+	var client *form3apiclient.Form3ApiClient
 
 	const resourceEncoding = "application/json; charset=utf-8"
 
