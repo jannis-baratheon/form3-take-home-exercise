@@ -8,37 +8,6 @@ import (
 	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 )
 
-// AccountData is a DTO representing an account in the Form3 org section.
-// See https://api-docs.form3.tech/api.html#organisation-accounts for
-// more information about the model.
-type AccountData struct {
-	Attributes     AccountAttributes `json:"attributes,omitempty"`
-	ID             string            `json:"id,omitempty"`
-	OrganisationID string            `json:"organisation_id,omitempty"`
-	Type           string            `json:"type,omitempty"`
-	Version        int64             `json:"version,omitempty"`
-}
-
-// AccountAttributes is a sub-section of the information about an account.
-// Part of AccountData DTO.
-type AccountAttributes struct {
-	AccountClassification   string   `json:"account_classification,omitempty"`
-	AccountMatchingOptOut   bool     `json:"account_matching_opt_out,omitempty"`
-	AccountNumber           string   `json:"account_number,omitempty"`
-	AlternativeNames        []string `json:"alternative_names,omitempty"`
-	BankID                  string   `json:"bank_id,omitempty"`
-	BankIDCode              string   `json:"bank_id_code,omitempty"`
-	BaseCurrency            string   `json:"base_currency,omitempty"`
-	Bic                     string   `json:"bic,omitempty"`
-	Country                 string   `json:"country,omitempty"`
-	Iban                    string   `json:"iban,omitempty"`
-	JointAccount            bool     `json:"joint_account,omitempty"`
-	Name                    []string `json:"name,omitempty"`
-	SecondaryIdentification string   `json:"secondary_identification,omitempty"`
-	Status                  string   `json:"status,omitempty"`
-	Switched                bool     `json:"switched,omitempty"`
-}
-
 // Accounts allows fetching and modifying account data hosted in a the application.
 type Accounts interface {
 	Get(ctx context.Context, id string) (AccountData, error)
@@ -48,17 +17,17 @@ type Accounts interface {
 
 // Get fetches account data for the given account id.
 // Context can be used to control asynchronous requests.
-func (a *accounts) Get(ctx context.Context, id string) (AccountData, error) {
+func (a *accounts) Get(ctx context.Context, accountID string) (AccountData, error) {
 	var accountData AccountData
-	err := a.Handler.Fetch(ctx, id, nil, &accountData)
+	err := a.Handler.Fetch(ctx, accountID, nil, &accountData)
 
 	return accountData, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
 // Delete deletes an account  with the given id and version.
 // Context can be used to control asynchronous requests.
-func (a *accounts) Delete(ctx context.Context, id string, version int64) error {
-	err := a.Handler.Delete(ctx, id, map[string]string{"version": fmt.Sprint(version)})
+func (a *accounts) Delete(ctx context.Context, accountID string, version int64) error {
+	err := a.Handler.Delete(ctx, accountID, map[string]string{"version": fmt.Sprint(version)})
 
 	return err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }

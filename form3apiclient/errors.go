@@ -10,7 +10,7 @@ import (
 // the remote server returning an error response.
 var ErrRemoteError = errors.New("remote server returned an error")
 
-// RemoteError constructs an error for a given HTTP status code.
+// RemoteError constructs an error for the given HTTP status code.
 func RemoteError(httpStatusCode int) error {
 	return fmt.Errorf(
 		"%w: http status code \"%d: %s\"",
@@ -19,7 +19,7 @@ func RemoteError(httpStatusCode int) error {
 		http.StatusText(httpStatusCode))
 }
 
-// RemoteErrorWithServerMessage constructs an error for a given HTTP status code
+// RemoteErrorWithServerMessage constructs an error for the given HTTP status code
 // and an additional error message returned by the server.
 func RemoteErrorWithServerMessage(httpStatusCode int, serverMessage string) error {
 	return fmt.Errorf(

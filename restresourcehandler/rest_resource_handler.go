@@ -6,14 +6,18 @@ import (
 	"net/url"
 )
 
-type RemoteErrorExtractor func(response *http.Response) error
-
+// RestResourceHandler is used to query or update a REST API resource.
+// Avoid cerating instances of RestResourceHandler directly.
+// Rather use the NewRestResourceHandler function.
 type RestResourceHandler struct {
 	client      *http.Client
 	config      Config
 	resourceURL url.URL
 }
 
+// NewRestResourceHandler creates a new RestResourceHandler instance
+// for a given Config, HTTP client isntance and resource URL
+// (e.g. "http://example.com/api/qualifier/resource").
 func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) *RestResourceHandler {
 	validateRestResourceHandlerConfig(config)
 
@@ -35,31 +39,50 @@ func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config 
 	return &handler
 }
 
-func (c *RestResourceHandler) Fetch(ctx context.Context, id string, params map[string]string, resp interface{}) error {
+// Fetch fetches a resource for a given id, query parameters.
+// resp is an output parameter that the fetched object will be stored in.
+// Context can be used to control asynchronous requests.
+func (c *RestResourceHandler) Fetch(
+	ctx context.Context,
+	resourceID string,
+	queryParams map[string]string,
+	resp interface{}) error {
 	return c.request(
 		ctx,
 		requestParams{
 			HTTPMethod:     http.MethodGet,
-			ResourceID:     id,
-			QueryParams:    params,
+			ResourceID:     resourceID,
+			QueryParams:    queryParams,
 			Response:       resp,
 			ExpectedStatus: http.StatusOK,
 		})
 }
 
-func (c *RestResourceHandler) Delete(ctx context.Context, id string, params map[string]string) error {
+// Delete deletes a resource with a given id.
+// Addition query parameters can be specified to be sent with the request.
+// Context can be used to control asynchronous requests.
+func (c *RestResourceHandler) Delete(
+	ctx context.Context,
+	resourceID string,
+	queryParams map[string]string) error {
 	return c.request(
 		ctx,
 		requestParams{
 			HTTPMethod:       http.MethodDelete,
-			ResourceID:       id,
-			QueryParams:      params,
+			ResourceID:       resourceID,
+			QueryParams:      queryParams,
 			DoDiscardContent: true,
 			ExpectedStatus:   http.StatusNoContent,
 		})
 }
 
-func (c *RestResourceHandler) Create(ctx context.Context, resourceToCreate interface{}, resp interface{}) error {
+// Create creates a resource given in the resourceToCreate parameter
+// and stores the response in the resp parameter.
+// Context can be used to control asynchronous requests.
+func (c *RestResourceHandler) Create(
+	ctx context.Context,
+	resourceToCreate interface{},
+	resp interface{}) error {
 	return c.request(
 		ctx,
 		requestParams{
@@ -69,46 +92,4 @@ func (c *RestResourceHandler) Create(ctx context.Context, resourceToCreate inter
 			Response:            resp,
 			ExpectedStatus:      http.StatusCreated,
 		})
-}
-
-func (c *RestResourceHandler) request(ctx context.Context, params requestParams) error {
-	validateRequestParameters(params)
-
-	var id *string
-	if !params.DoDiscardResourceID {
-		id = &params.ResourceID
-	}
-
-	req, err := createRequest(ctx, c.config, c.resourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
-	if err != nil {
-		return err
-	}
-
-	if !params.DoDiscardContent {
-		req.Header.Add("Accept", c.config.ResourceEncoding)
-	}
-
-	if params.Resource != nil {
-		req.Header.Add("Content-Type", c.config.ResourceEncoding)
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return WrapError(err, "executing http request")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != params.ExpectedStatus {
-		if c.config.RemoteErrorExtractor == nil {
-			return defaultRemoteErrorExtractor(resp)
-		}
-
-		return c.config.RemoteErrorExtractor(resp)
-	}
-
-	if params.DoDiscardContent {
-		return nil
-	}
-
-	return readResponse(c.config, resp.Body, params.Response)
 }
