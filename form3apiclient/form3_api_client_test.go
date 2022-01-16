@@ -1,6 +1,7 @@
 package form3apiclient_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -29,15 +30,15 @@ type apiCall func(client *form3apiclient.Form3ApiClient) error
 func getExampleValidAPICalls() map[string]apiCall {
 	return map[string]apiCall{
 		"accounts get": func(client *form3apiclient.Form3ApiClient) error {
-			_, err := client.Accounts().Get(someValidUUID)
+			_, err := client.Accounts().Get(context.Background(), someValidUUID)
 
 			return err //nolint:wrapcheck // we need this error unwrapped
 		},
 		"accounts delete": func(client *form3apiclient.Form3ApiClient) error {
-			return client.Accounts().Delete(someValidUUID, 0) //nolint:wrapcheck // we need this error unwrapped
+			return client.Accounts().Delete(context.Background(), someValidUUID, 0) //nolint:wrapcheck,lll // we need this error unwrapped
 		},
 		"accounts create": func(client *form3apiclient.Form3ApiClient) error {
-			_, err := client.Accounts().Create(form3apiclient.AccountData{})
+			_, err := client.Accounts().Create(context.Background(), form3apiclient.AccountData{})
 
 			return err //nolint:wrapcheck // we need this error unwrapped
 		},
@@ -75,7 +76,7 @@ var _ = Describe("Form3ApiClient", func() {
 					ghttp.VerifyHeaderKV("Accept", resourceEncoding),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, wrapper{expectedData})))
 
-			response, err := client.Accounts().Get(expectedData.ID)
+			response, err := client.Accounts().Get(context.Background(), expectedData.ID)
 
 			Expect(err).To(Succeed())
 			Expect(response).To(Equal(expectedData))
@@ -89,7 +90,7 @@ var _ = Describe("Form3ApiClient", func() {
 					ghttp.VerifyRequest("DELETE", accountsURL+"/"+accountID, "version=100"),
 					ghttp.RespondWith(http.StatusNoContent, nil)))
 
-			err := client.Accounts().Delete(accountID, 100)
+			err := client.Accounts().Delete(context.Background(), accountID, 100)
 
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -106,7 +107,7 @@ var _ = Describe("Form3ApiClient", func() {
 					ghttp.VerifyJSONRepresenting(wrapper{requestData}),
 					ghttp.RespondWithJSONEncoded(http.StatusCreated, wrapper{expectedData})))
 
-			actualResponse, err := client.Accounts().Create(requestData)
+			actualResponse, err := client.Accounts().Create(context.Background(), requestData)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualResponse).To(Equal(expectedData))

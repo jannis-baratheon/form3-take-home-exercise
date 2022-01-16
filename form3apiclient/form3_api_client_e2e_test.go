@@ -1,6 +1,7 @@
 package form3apiclient_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,7 +21,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 	var apiURL string
 
 	createAndScheduleCleanup := func(accountData form3apiclient.AccountData) (form3apiclient.AccountData, error) {
-		res, err := accounts.Create(accountData)
+		res, err := accounts.Create(context.Background(), accountData)
 
 		if err == nil {
 			createdResources = append(createdResources, res)
@@ -91,7 +92,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 		})
 
 		By("fetches account", func() {
-			fetchedAccountData, err := accounts.Get(resource.ID)
+			fetchedAccountData, err := accounts.Get(context.Background(), resource.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fetchedAccountData).To(Equal(resource))
 			Expect(fetchedAccountData).To(HaveField("Type", "accounts"))
@@ -101,7 +102,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 		})
 
 		By("deletes account", func() {
-			err := accounts.Delete(resource.ID, resource.Version)
+			err := accounts.Delete(context.Background(), resource.ID, resource.Version)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -115,11 +116,11 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 				accountData, err = createAndScheduleCleanup(someValidAccountData(uuid.NewString()))
 				Expect(err).NotTo(HaveOccurred())
 
-				err = accounts.Delete(accountData.ID, accountData.Version)
+				err = accounts.Delete(context.Background(), accountData.ID, accountData.Version)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			err = accounts.Delete(accountData.ID, accountData.Version)
+			err = accounts.Delete(context.Background(), accountData.ID, accountData.Version)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(form3apiclient.RemoteError(http.StatusNotFound)))
 		})
@@ -133,7 +134,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			err = accounts.Delete(accountData.ID, accountData.Version+1)
+			err = accounts.Delete(context.Background(), accountData.ID, accountData.Version+1)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(
 				form3apiclient.RemoteErrorWithServerMessage(http.StatusConflict, "invalid version")))
@@ -177,11 +178,11 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 				accountData, err = createAndScheduleCleanup(someValidAccountData(uuid.NewString()))
 				Expect(err).NotTo(HaveOccurred())
 
-				err = accounts.Delete(accountData.ID, accountData.Version)
+				err = accounts.Delete(context.Background(), accountData.ID, accountData.Version)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			_, err = accounts.Get(accountData.ID)
+			_, err = accounts.Get(context.Background(), accountData.ID)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(

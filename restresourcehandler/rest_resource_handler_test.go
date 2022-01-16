@@ -1,6 +1,7 @@
 package restresourcehandler_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -31,15 +32,15 @@ func getExampleValidAPICalls() map[string]apiCall {
 		"fetch": func(client *restresourcehandler.RestResourceHandler) error {
 			var response person
 
-			return client.Fetch("1", map[string]string{"attrs": "name"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
+			return client.Fetch(context.Background(), "1", map[string]string{"attrs": "name"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
 		},
 		"delete": func(client *restresourcehandler.RestResourceHandler) error {
-			return client.Delete("1", map[string]string{"version": "1"}) //nolint:wrapcheck // we need this error unwrapped
+			return client.Delete(context.Background(), "1", map[string]string{"version": "1"}) //nolint:wrapcheck,lll // we need this error unwrapped
 		},
 		"create": func(client *restresourcehandler.RestResourceHandler) error {
 			var response person
 
-			return client.Create(person{"Smith"}, &response) //nolint:wrapcheck // we need this error unwrapped
+			return client.Create(context.Background(), person{"Smith"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
 		},
 	}
 }
@@ -92,7 +93,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWithJSONEncoded(http.StatusOK, wrapper{expectedPerson})))
 
 			var response person
-			err := client.Fetch("1", map[string]string{"attrs": "name"}, &response)
+			err := client.Fetch(context.Background(), "1", map[string]string{"attrs": "name"}, &response)
 
 			Expect(err).To(Succeed())
 			Expect(response).To(Equal(expectedPerson))
@@ -104,7 +105,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.VerifyRequest("DELETE", resourcePath+"/1", "version=1"),
 					ghttp.RespondWith(http.StatusNoContent, nil)))
 
-			err := client.Delete("1", map[string]string{"version": "1"})
+			err := client.Delete(context.Background(), "1", map[string]string{"version": "1"})
 
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -122,7 +123,7 @@ var _ = Describe("RestResourceHandler", func() {
 					ghttp.RespondWithJSONEncoded(http.StatusCreated, wrapper{expectedResponse})))
 
 			var actualResponse person
-			err := client.Create(payload, &actualResponse)
+			err := client.Create(context.Background(), payload, &actualResponse)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualResponse).To(Equal(expectedResponse))

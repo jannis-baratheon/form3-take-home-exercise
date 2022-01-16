@@ -1,6 +1,7 @@
 package form3apiclient
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -37,9 +38,9 @@ type AccountAttributes struct {
 }
 
 type Accounts interface {
-	Get(id string) (AccountData, error)
-	Delete(id string, version int64) error
-	Create(accountData AccountData) (AccountData, error)
+	Get(ctx context.Context, id string) (AccountData, error)
+	Delete(ctx context.Context, id string, version int64) error
+	Create(ctx context.Context, accountData AccountData) (AccountData, error)
 }
 
 type accounts struct {
@@ -60,22 +61,22 @@ func newAccounts(apiURL string, httpClient *http.Client) (*accounts, error) {
 	return &accounts{handler}, nil
 }
 
-func (a *accounts) Get(id string) (AccountData, error) {
+func (a *accounts) Get(ctx context.Context, id string) (AccountData, error) {
 	var accountData AccountData
-	err := a.Handler.Fetch(id, nil, &accountData)
+	err := a.Handler.Fetch(ctx, id, nil, &accountData)
 
 	return accountData, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
-func (a *accounts) Delete(id string, version int64) error {
-	err := a.Handler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
+func (a *accounts) Delete(ctx context.Context, id string, version int64) error {
+	err := a.Handler.Delete(ctx, id, map[string]string{"version": fmt.Sprint(version)})
 
 	return err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
-func (a *accounts) Create(accountData AccountData) (AccountData, error) {
+func (a *accounts) Create(ctx context.Context, accountData AccountData) (AccountData, error) {
 	var response AccountData
-	err := a.Handler.Create(&accountData, &response)
+	err := a.Handler.Create(ctx, &accountData, &response)
 
 	return response, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }

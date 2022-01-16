@@ -2,6 +2,7 @@ package restresourcehandler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -15,6 +16,7 @@ func defaultRemoteErrorExtractor(response *http.Response) error {
 }
 
 func createRequest(
+	ctx context.Context,
 	config Config,
 	resourceURL url.URL,
 	method string,
@@ -46,7 +48,12 @@ func createRequest(
 		}
 	}
 
-	return http.NewRequest(method, resourceURL.String(), body)
+	req, err := http.NewRequestWithContext(ctx, method, resourceURL.String(), body)
+	if err != nil {
+		return nil, WrapError(err, "constructing request")
+	}
+
+	return req, nil
 }
 
 func readResponse(config Config, reader io.Reader, response interface{}) error {

@@ -1,6 +1,7 @@
 package restresourcehandler
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 )
@@ -34,37 +35,43 @@ func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config 
 	return &handler
 }
 
-func (c *RestResourceHandler) Fetch(id string, params map[string]string, response interface{}) error {
-	return c.request(requestParams{
-		HTTPMethod:     http.MethodGet,
-		ResourceID:     id,
-		QueryParams:    params,
-		Response:       response,
-		ExpectedStatus: http.StatusOK,
-	})
+func (c *RestResourceHandler) Fetch(ctx context.Context, id string, params map[string]string, resp interface{}) error {
+	return c.request(
+		ctx,
+		requestParams{
+			HTTPMethod:     http.MethodGet,
+			ResourceID:     id,
+			QueryParams:    params,
+			Response:       resp,
+			ExpectedStatus: http.StatusOK,
+		})
 }
 
-func (c *RestResourceHandler) Delete(id string, params map[string]string) error {
-	return c.request(requestParams{
-		HTTPMethod:       http.MethodDelete,
-		ResourceID:       id,
-		QueryParams:      params,
-		DoDiscardContent: true,
-		ExpectedStatus:   http.StatusNoContent,
-	})
+func (c *RestResourceHandler) Delete(ctx context.Context, id string, params map[string]string) error {
+	return c.request(
+		ctx,
+		requestParams{
+			HTTPMethod:       http.MethodDelete,
+			ResourceID:       id,
+			QueryParams:      params,
+			DoDiscardContent: true,
+			ExpectedStatus:   http.StatusNoContent,
+		})
 }
 
-func (c *RestResourceHandler) Create(resourceToCreate interface{}, response interface{}) error {
-	return c.request(requestParams{
-		HTTPMethod:          http.MethodPost,
-		DoDiscardResourceID: true,
-		Resource:            resourceToCreate,
-		Response:            response,
-		ExpectedStatus:      http.StatusCreated,
-	})
+func (c *RestResourceHandler) Create(ctx context.Context, resourceToCreate interface{}, resp interface{}) error {
+	return c.request(
+		ctx,
+		requestParams{
+			HTTPMethod:          http.MethodPost,
+			DoDiscardResourceID: true,
+			Resource:            resourceToCreate,
+			Response:            resp,
+			ExpectedStatus:      http.StatusCreated,
+		})
 }
 
-func (c *RestResourceHandler) request(params requestParams) error {
+func (c *RestResourceHandler) request(ctx context.Context, params requestParams) error {
 	validateRequestParameters(params)
 
 	var id *string
@@ -72,7 +79,7 @@ func (c *RestResourceHandler) request(params requestParams) error {
 		id = &params.ResourceID
 	}
 
-	req, err := createRequest(c.config, c.resourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
+	req, err := createRequest(ctx, c.config, c.resourceURL, params.HTTPMethod, id, params.QueryParams, params.Resource)
 	if err != nil {
 		return err
 	}
