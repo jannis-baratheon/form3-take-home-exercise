@@ -1,7 +1,6 @@
 package form3apiclient
 
 import (
-	"fmt"
 	"net/url"
 	"path"
 )
@@ -9,32 +8,32 @@ import (
 func join(baseAbsoluteURL string, relativePath string) (string, error) {
 	baseURL, err := url.Parse(baseAbsoluteURL)
 	if err != nil {
-		return "", err
+		return "", WrapError(err, "error parsing url")
 	}
 
 	if !baseURL.IsAbs() {
-		return "", fmt.Errorf("baseAbsoluteURL must be absolute")
+		return "", URLError("baseAbsoluteURL must be absolute")
 	}
 
 	if len(baseURL.Query()) > 0 {
-		return "", fmt.Errorf("baseAbsoluteURL with query is not supported")
+		return "", URLError("baseAbsoluteURL with query is not supported")
 	}
 
 	if baseURL.Fragment != "" {
-		return "", fmt.Errorf("baseAbsoluteURL with fragment is not supported")
+		return "", URLError("baseAbsoluteURL with fragment is not supported")
 	}
 
 	relativeURL, err := url.Parse(relativePath)
 	if err != nil {
-		return "", err
+		return "", WrapError(err, "error parsing url")
 	}
 
 	if len(relativeURL.Query()) > 0 {
-		return "", fmt.Errorf("relativeURL with query is not supported")
+		return "", URLError("relativeURL with query is not supported")
 	}
 
 	if relativeURL.Fragment != "" {
-		return "", fmt.Errorf("relativeURL with fragment is not supported")
+		return "", URLError("relativeURL with fragment is not supported")
 	}
 
 	baseURL.Path = path.Join(baseURL.Path, relativePath)

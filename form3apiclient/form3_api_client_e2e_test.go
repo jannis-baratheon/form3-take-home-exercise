@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func() {
+var _ = Describe("Form3ApiClient with real server", Label("e2e"), func() {
 	var accounts form3apiclient.Accounts
 	var createdResources []form3apiclient.AccountData
 	var apiURL string
@@ -26,7 +26,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 			createdResources = append(createdResources, res)
 		}
 
-		return res, err
+		return res, err //nolint:wrapcheck // we need this error unwrapped
 	}
 
 	cleanup := func() {
@@ -107,7 +107,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 	})
 
 	Context("communicates api errors", func() {
-		It("when deleting non-existent account", func() {
+		FIt("when deleting non-existent account", func() {
 			var err error
 			var accountData form3apiclient.AccountData
 
@@ -121,8 +121,7 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 
 			err = accounts.Delete(accountData.ID, accountData.Version)
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(fmt.Errorf(
-				`api responded with error: http status code 404, http status "404 Not Found"`)))
+			Expect(err).To(MatchError(form3apiclient.RemoteError(http.StatusNotFound)))
 		})
 
 		It("when attempting to delete account with invalid version", func() {
@@ -136,8 +135,8 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 
 			err = accounts.Delete(accountData.ID, accountData.Version+1)
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(fmt.Errorf(
-				`api responded with error: http status code 409, http status "409 Conflict", server message: "invalid version"`)))
+			Expect(err).To(MatchError(
+				form3apiclient.RemoteErrorWithServerMessage(http.StatusConflict, "invalid version")))
 		})
 
 		It("when creating account with invalid data", func() {
@@ -147,10 +146,10 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 			_, err := createAndScheduleCleanup(invalidAccountData)
 
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(fmt.Errorf(
-				"api responded with error: http status code 400, " +
-					"http status \"400 Bad Request\", " +
-					"server message: \"validation failure list:\nvalidation failure list:\nvalidation failure list:\nname in body is required\"")))
+			Expect(err).To(MatchError(
+				form3apiclient.RemoteErrorWithServerMessage(
+					http.StatusBadRequest,
+					"validation failure list:\nvalidation failure list:\nvalidation failure list:\nname in body is required")))
 		})
 
 		It("creating a duplicate account", func() {
@@ -165,10 +164,9 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 			_, err = createAndScheduleCleanup(accountData)
 
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(fmt.Errorf(
-				"api responded with error: http status code 409, " +
-					"http status \"409 Conflict\", " +
-					"server message: \"Account cannot be created as it violates a duplicate constraint\"")))
+			Expect(err).To(MatchError(form3apiclient.RemoteErrorWithServerMessage(
+				http.StatusConflict,
+				"Account cannot be created as it violates a duplicate constraint")))
 		})
 
 		It("fetching a non-existent account", func() {
@@ -186,10 +184,10 @@ var _ = Describe("Form3ApiClient with real server", Label("e2e"), Ordered, func(
 			_, err = accounts.Get(accountData.ID)
 
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(fmt.Errorf(
-				"api responded with error: http status code 404, " +
-					"http status \"404 Not Found\", " +
-					"server message: \"record " + accountData.ID + " does not exist\"")))
+			Expect(err).To(MatchError(
+				form3apiclient.RemoteErrorWithServerMessage(
+					http.StatusNotFound,
+					"record "+accountData.ID+" does not exist")))
 		})
 	})
 })

@@ -3,7 +3,6 @@ package restresourcehandler
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 )
 
 func defaultRemoteErrorExtractor(response *http.Response) error {
-	return fmt.Errorf(`remote server returned error status: %d`, response.StatusCode)
+	return RemoteError(response.StatusCode)
 }
 
 func createRequest(
@@ -53,27 +52,31 @@ func createRequest(
 func readResponse(config Config, reader io.Reader, response interface{}) error {
 	respPayload, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return err
+		return WrapError(err, "decoding response")
 	}
 
 	if !config.IsDataWrapped {
-		return json.Unmarshal(respPayload, &response)
+		err = json.Unmarshal(respPayload, &response)
+
+		return WrapError(err, "parsing response json")
 	}
 
 	var responseMap map[string]json.RawMessage
 	err = json.Unmarshal(respPayload, &responseMap)
 
 	if err != nil {
-		return err
+		return WrapError(err, "parsing response json")
 	}
 
-	return json.Unmarshal(responseMap[config.DataPropertyName], &response)
+	err = json.Unmarshal(responseMap[config.DataPropertyName], &response)
+
+	return WrapError(err, "parsing response json")
 }
 
 func readerForResource(config Config, resource interface{}) (io.Reader, error) {
 	payload, err := json.Marshal(resource)
 	if err != nil {
-		return nil, err
+		return nil, WrapError(err, "marshalling request json")
 	}
 
 	if config.IsDataWrapped {
@@ -81,7 +84,7 @@ func readerForResource(config Config, resource interface{}) (io.Reader, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, WrapError(err, "marshalling request json")
 	}
 
 	return bytes.NewReader(payload), nil

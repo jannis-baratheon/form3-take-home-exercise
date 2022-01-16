@@ -24,17 +24,21 @@ type remoteError struct {
 	Message string `json:"error_message"`
 }
 
-type apiCall func(client form3apiclient.Form3ApiClient) (interface{}, error)
+type apiCall func(client form3apiclient.Form3ApiClient) error
 
 var exampleValidAPICalls = map[string]apiCall{
-	"accounts get": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(someValidUUID)
+	"accounts get": func(client form3apiclient.Form3ApiClient) error {
+		_, err := client.Accounts().Get(someValidUUID)
+
+		return err //nolint:wrapcheck // we need this error unwrapped
 	},
-	"accounts delete": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Get(someValidUUID)
+	"accounts delete": func(client form3apiclient.Form3ApiClient) error {
+		return client.Accounts().Delete(someValidUUID, 0) //nolint:wrapcheck // we need this error unwrapped
 	},
-	"accounts create": func(client form3apiclient.Form3ApiClient) (interface{}, error) {
-		return client.Accounts().Create(form3apiclient.AccountData{})
+	"accounts create": func(client form3apiclient.Form3ApiClient) error {
+		_, err := client.Accounts().Create(form3apiclient.AccountData{})
+
+		return err //nolint:wrapcheck // we need this error unwrapped
 	},
 }
 
@@ -120,16 +124,10 @@ var _ = Describe("Form3ApiClient", func() {
 
 			forEachExampleValidAPICall(func(callName string, call apiCall) {
 				It(fmt.Sprintf(`includes server message in returned error for "%s" call`, callName), func() {
-					_, err := call(client)
+					err := call(client)
 
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(
-						fmt.Errorf(
-							`api responded with error: http status code %d, http status "%d %s", server message: "%s"`,
-							expectedErrorStatus,
-							expectedErrorStatus,
-							http.StatusText(expectedErrorStatus),
-							expectedRemoteErrorMessage)))
+					Expect(err.Error()).To(ContainSubstring(expectedRemoteErrorMessage))
 				})
 			})
 		})
@@ -145,15 +143,10 @@ var _ = Describe("Form3ApiClient", func() {
 
 			forEachExampleValidAPICall(func(callName string, call apiCall) {
 				It(fmt.Sprintf(`does not include the server message part in returned error for "%s" call`, callName), func() {
-					_, err := call(client)
+					err := call(client)
 
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(
-						fmt.Errorf(
-							`api responded with error: http status code %d, http status "%d %s"`,
-							expectedErrorStatus,
-							expectedErrorStatus,
-							http.StatusText(expectedErrorStatus))))
+					Expect(err.Error()).NotTo(ContainSubstring("server message: "))
 				})
 			})
 		})

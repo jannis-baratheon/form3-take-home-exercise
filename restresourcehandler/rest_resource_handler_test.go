@@ -30,15 +30,15 @@ var exampleValidAPICalls = map[string]apiCall{
 	"fetch": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
 
-		return client.Fetch("1", map[string]string{"attrs": "name"}, &response)
+		return client.Fetch("1", map[string]string{"attrs": "name"}, &response) //nolint:wrapcheck,lll // we need this error unwrapped
 	},
 	"delete": func(client restresourcehandler.RestResourceHandler) error {
-		return client.Delete("1", map[string]string{"version": "1"})
+		return client.Delete("1", map[string]string{"version": "1"}) //nolint:wrapcheck // we need this error unwrapped
 	},
 	"create": func(client restresourcehandler.RestResourceHandler) error {
 		var response person
 
-		return client.Create(person{"Smith"}, &response)
+		return client.Create(person{"Smith"}, &response) //nolint:wrapcheck // we need this error unwrapped
 	},
 }
 
@@ -146,7 +146,7 @@ var _ = Describe("RestResourceHandler", func() {
 			It(fmt.Sprintf(`provides default error during "%s" call`, reqName), func() {
 				err := req(client)
 
-				Expect(err).To(MatchError(fmt.Errorf("remote server returned error status: 500")))
+				Expect(err).To(MatchError(restresourcehandler.RemoteError(http.StatusInternalServerError)))
 			})
 		})
 	})
@@ -154,7 +154,7 @@ var _ = Describe("RestResourceHandler", func() {
 	Context("with custom remote error extractor", func() {
 		Context("providing error not based on response content", func() {
 			var client restresourcehandler.RestResourceHandler
-			customError := fmt.Errorf("some custom error")
+			customError := fmt.Errorf("some custom error") //nolint:goerr113 // not a problem here
 
 			BeforeEach(func() {
 				client = restresourcehandler.NewRestResourceHandler(
@@ -193,17 +193,17 @@ var _ = Describe("RestResourceHandler", func() {
 						RemoteErrorExtractor: func(response *http.Response) error {
 							respPayload, err := ioutil.ReadAll(response.Body)
 							if err != nil {
-								return err
+								panic(err)
 							}
 
 							var remoteError apiError
 							err = json.Unmarshal(respPayload, &remoteError)
 
 							if err != nil {
-								return err
+								panic(err)
 							}
 
-							return fmt.Errorf(`http status %d, message "%s"`, response.StatusCode, remoteError.ErrorMessage)
+							return restresourcehandler.RemoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage) //nolint:wrapcheck,lll
 						},
 					})
 			})
@@ -216,7 +216,7 @@ var _ = Describe("RestResourceHandler", func() {
 
 					err := req(client)
 
-					Expect(err).To(MatchError(fmt.Errorf(`http status 500, message "some api error occurred"`)))
+					Expect(err).To(MatchError(restresourcehandler.RemoteErrorWithServerMessage(500, "some api error occurred")))
 				})
 			})
 		})

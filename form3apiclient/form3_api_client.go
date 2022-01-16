@@ -2,7 +2,6 @@ package form3apiclient
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -29,31 +28,23 @@ var config = restresourcehandler.Config{
 }
 
 func extractRemoteError(response *http.Response) error {
-	respPayload, err := ioutil.ReadAll(response.Body)
-
 	if response.ContentLength == 0 {
-		return fmt.Errorf(
-			`api responded with error: http status code %d, http status "%s"`,
-			response.StatusCode,
-			response.Status)
+		return RemoteError(response.StatusCode)
 	}
 
+	respPayload, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return WrapError(err, "reading response")
 	}
 
 	var remoteError form3APIRemoteError
 	err = json.Unmarshal(respPayload, &remoteError)
 
 	if err != nil {
-		return err
+		return WrapError(err, "parsing response json")
 	}
 
-	return fmt.Errorf(
-		`api responded with error: http status code %d, http status "%s", server message: "%s"`,
-		response.StatusCode,
-		response.Status,
-		remoteError.ErrorMessage)
+	return RemoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage)
 }
 
 func NewForm3APIClient(apiURL string, httpClient *http.Client) *form3ApiClient {

@@ -19,7 +19,7 @@ type restResourceHandler struct {
 	ResourceURL url.URL
 }
 
-func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) RestResourceHandler {
+func NewRestResourceHandler(httpClient *http.Client, resourceURL string, config Config) *restResourceHandler {
 	validateRestResourceHandlerConfig(config)
 
 	url, err := url.Parse(resourceURL)
@@ -93,7 +93,7 @@ func (c *restResourceHandler) request(params requestParams) error {
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return WrapError(err, "executing http request")
 	}
 	defer resp.Body.Close()
 

@@ -51,7 +51,7 @@ const resourcePath = "organisation/accounts"
 func newAccounts(apiURL string, httpClient *http.Client) (*accounts, error) {
 	accountsResourceURL, err := join(apiURL, resourcePath)
 	if err != nil {
-		return nil, err
+		return nil, WrapError(err, "constructing api url")
 	}
 
 	handler := restresourcehandler.NewRestResourceHandler(httpClient, accountsResourceURL, config)
@@ -63,16 +63,18 @@ func (a *accounts) Get(id string) (AccountData, error) {
 	var accountData AccountData
 	err := a.Handler.Fetch(id, nil, &accountData)
 
-	return accountData, err
+	return accountData, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
 func (a *accounts) Delete(id string, version int64) error {
-	return a.Handler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
+	err := a.Handler.Delete(id, map[string]string{"version": fmt.Sprint(version)})
+
+	return err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
 func (a *accounts) Create(accountData AccountData) (AccountData, error) {
 	var response AccountData
 	err := a.Handler.Create(&accountData, &response)
 
-	return response, err
+	return response, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }

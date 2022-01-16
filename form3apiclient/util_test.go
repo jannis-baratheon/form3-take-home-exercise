@@ -1,8 +1,6 @@
 package form3apiclient
 
 import (
-	"fmt"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -44,7 +42,7 @@ var _ = Describe("util", func() {
 				actualResultURL, err := join(baseURL, path)
 
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(fmt.Errorf(expectedError)))
+				Expect(err).To(MatchError(URLError(expectedError)))
 				Expect(actualResultURL).To(BeZero())
 			},
 			EntryDescription(`"%s" join "%s" causes error "%s"`),
