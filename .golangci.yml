@@ -1,11 +1,14 @@
 linters:
   enable-all: true
   disable:
-  - tagliatelle
-  - golint
-  - interfacer
-  - maligned
-  - scopelint
+  - golint # unsupported
+  - maligned # unsupported
+  - scopelint # unsupported
+  - interfacer # unsupported
+  - paralleltest # doesn't work for Ginkgo tests
   - exhaustivestruct
-  - paralleltest
-  - testpackage
+linters-settings:
+  tagliatelle:
+    case:
+      rules:
+        json: snake
