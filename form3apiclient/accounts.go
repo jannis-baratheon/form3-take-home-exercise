@@ -8,7 +8,7 @@ import (
 	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 )
 
-// AccountData represents an account in the form3 org section.
+// AccountData is a DTO representing an account in the Form3 org section.
 // See https://api-docs.form3.tech/api.html#organisation-accounts for
 // more information about the model.
 type AccountData struct {
@@ -19,7 +19,8 @@ type AccountData struct {
 	Version        int64             `json:"version,omitempty"`
 }
 
-// AccountAttributes is a sub-section of information about an account.
+// AccountAttributes is a sub-section of the information about an account.
+// Part of AccountData DTO.
 type AccountAttributes struct {
 	AccountClassification   string   `json:"account_classification,omitempty"`
 	AccountMatchingOptOut   bool     `json:"account_matching_opt_out,omitempty"`
@@ -38,10 +39,38 @@ type AccountAttributes struct {
 	Switched                bool     `json:"switched,omitempty"`
 }
 
+// Accounts allows fetching and modifying account data hosted in a the application.
 type Accounts interface {
 	Get(ctx context.Context, id string) (AccountData, error)
 	Delete(ctx context.Context, id string, version int64) error
 	Create(ctx context.Context, accountData AccountData) (AccountData, error)
+}
+
+// Get fetches account data for the given account id.
+// Context can be used to control asynchronous requests.
+func (a *accounts) Get(ctx context.Context, id string) (AccountData, error) {
+	var accountData AccountData
+	err := a.Handler.Fetch(ctx, id, nil, &accountData)
+
+	return accountData, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
+}
+
+// Delete deletes an account  with the given id and version.
+// Context can be used to control asynchronous requests.
+func (a *accounts) Delete(ctx context.Context, id string, version int64) error {
+	err := a.Handler.Delete(ctx, id, map[string]string{"version": fmt.Sprint(version)})
+
+	return err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
+}
+
+// Create creates an account using the passed in AccountData DTO instance.
+// Returns the created account instance.
+// Context can be used to control asynchronous requests.
+func (a *accounts) Create(ctx context.Context, accountData AccountData) (AccountData, error) {
+	var response AccountData
+	err := a.Handler.Create(ctx, &accountData, &response)
+
+	return response, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }
 
 type accounts struct {
@@ -60,24 +89,4 @@ func newAccounts(apiURL string, httpClient *http.Client) (*accounts, error) {
 		httpClient, accountsResourceURL, getRestResourceHandlerConfig())
 
 	return &accounts{handler}, nil
-}
-
-func (a *accounts) Get(ctx context.Context, id string) (AccountData, error) {
-	var accountData AccountData
-	err := a.Handler.Fetch(ctx, id, nil, &accountData)
-
-	return accountData, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
-}
-
-func (a *accounts) Delete(ctx context.Context, id string, version int64) error {
-	err := a.Handler.Delete(ctx, id, map[string]string{"version": fmt.Sprint(version)})
-
-	return err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
-}
-
-func (a *accounts) Create(ctx context.Context, accountData AccountData) (AccountData, error) {
-	var response AccountData
-	err := a.Handler.Create(ctx, &accountData, &response)
-
-	return response, err //nolint:wrapcheck // this error is in fact local (see extractRemoteError)
 }

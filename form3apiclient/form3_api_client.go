@@ -1,50 +1,22 @@
 package form3apiclient
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
-
-	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 )
 
 type form3APIRemoteError struct {
 	ErrorMessage string `json:"error_message"`
 }
 
+// Form3ApiClient is a client object used to call the Form3 REST API.
 type Form3ApiClient struct {
 	accountsEndpoint *accounts
 }
 
-func getRestResourceHandlerConfig() restresourcehandler.Config {
-	return restresourcehandler.Config{
-		ResourceEncoding:     "application/json; charset=utf-8",
-		IsDataWrapped:        true,
-		DataPropertyName:     "data",
-		RemoteErrorExtractor: extractRemoteError,
-	}
-}
-
-func extractRemoteError(response *http.Response) error {
-	if response.ContentLength == 0 {
-		return RemoteError(response.StatusCode)
-	}
-
-	respPayload, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return WrapError(err, "reading response")
-	}
-
-	var remoteError form3APIRemoteError
-	err = json.Unmarshal(respPayload, &remoteError)
-
-	if err != nil {
-		return WrapError(err, "parsing response json")
-	}
-
-	return RemoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage)
-}
-
+// NewForm3APIClient constructs a Form3 API Client for the given URL (e.g. "http://localhost:8080/v1")
+// and HTTP client instance.
+//
+// All HTTP calls will be made using the passed in HTTP client.
 func NewForm3APIClient(apiURL string, httpClient *http.Client) *Form3ApiClient {
 	accounts, err := newAccounts(apiURL, httpClient)
 	if err != nil {
@@ -54,6 +26,8 @@ func NewForm3APIClient(apiURL string, httpClient *http.Client) *Form3ApiClient {
 	return &Form3ApiClient{accountsEndpoint: accounts}
 }
 
+// Accounts returns a handler for the accounts endpoint  of the Form3 REST API
+// ("< form3 api url>/organisation/accounts").
 func (c *Form3ApiClient) Accounts() *accounts {
 	return c.accountsEndpoint
 }
