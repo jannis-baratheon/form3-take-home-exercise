@@ -51,6 +51,15 @@ func forEachExampleValidAPICall(consumer func(string, apiCall)) {
 	}
 }
 
+func remoteErrorWithServerMessage(httpStatusCode int, serverMessage string) error {
+	return fmt.Errorf(
+		"%w: http status code \"%d: %s\", server message: \"%s\"",
+		restresourcehandler.ErrRemoteError,
+		httpStatusCode,
+		http.StatusText(httpStatusCode),
+		serverMessage)
+}
+
 var _ = Describe("RestResourceHandler", func() {
 	var server *ghttp.Server
 	var httpClient *http.Client
@@ -206,7 +215,7 @@ var _ = Describe("RestResourceHandler", func() {
 								panic(err)
 							}
 
-							return restresourcehandler.RemoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage) //nolint:wrapcheck,lll
+							return remoteErrorWithServerMessage(response.StatusCode, remoteError.ErrorMessage)
 						},
 					})
 			})
@@ -219,7 +228,7 @@ var _ = Describe("RestResourceHandler", func() {
 
 					err := req(client)
 
-					Expect(err).To(MatchError(restresourcehandler.RemoteErrorWithServerMessage(500, "some api error occurred")))
+					Expect(err).To(MatchError(remoteErrorWithServerMessage(500, "some api error occurred")))
 				})
 			})
 		})

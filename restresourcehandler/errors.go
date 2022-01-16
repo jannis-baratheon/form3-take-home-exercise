@@ -16,15 +16,6 @@ func RemoteError(httpStatusCode int) error {
 		http.StatusText(httpStatusCode))
 }
 
-func RemoteErrorWithServerMessage(httpStatusCode int, serverMessage string) error {
-	return fmt.Errorf(
-		"%w: http status code \"%d: %s\", server message: \"%s\"",
-		ErrRemoteError,
-		httpStatusCode,
-		http.StatusText(httpStatusCode),
-		serverMessage)
-}
-
 func WrapError(err error, message string) error {
 	if err == nil {
 		return nil
