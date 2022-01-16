@@ -59,7 +59,7 @@ func (c *RestResourceHandler) Fetch(
 }
 
 // Delete deletes a resource with a given id.
-// Addition query parameters can be specified to be sent with the request.
+// Additional query parameters can be specified to be sent with the request.
 // Context can be used to control asynchronous requests.
 func (c *RestResourceHandler) Delete(
 	ctx context.Context,
