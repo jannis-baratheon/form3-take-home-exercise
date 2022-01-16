@@ -8,9 +8,9 @@ import (
 	"github.com/jannis-baratheon/form3-take-home-exercise/restresourcehandler"
 )
 
-// Account represents an account in the form3 org section.
+// AccountData represents an account in the form3 org section.
 // See https://api-docs.form3.tech/api.html#organisation-accounts for
-// more information about fields.
+// more information about the model.
 type AccountData struct {
 	Attributes     AccountAttributes `json:"attributes,omitempty"`
 	ID             string            `json:"id,omitempty"`
@@ -19,6 +19,7 @@ type AccountData struct {
 	Version        int64             `json:"version,omitempty"`
 }
 
+// AccountAttributes is a sub-section of information about an account.
 type AccountAttributes struct {
 	AccountClassification   string   `json:"account_classification,omitempty"`
 	AccountMatchingOptOut   bool     `json:"account_matching_opt_out,omitempty"`
