@@ -44,7 +44,7 @@ Apart from the usual integration/unit tests there are also E2E tests that requir
 
 ### Environment
 
-You can use [docker-compose](https://docs.docker.com/compose/) and the provided [docker-compose YML file](docker/docker-compose.ym) to start a test enviroment locally:
+You can use [docker-compose](https://docs.docker.com/compose/) and the provided [docker-compose YML file](docker/docker-compose.yml) to start a test enviroment locally:
 
     docker-compose -f docker/docker-compose.yml up -d
 
@@ -52,7 +52,7 @@ The enviroment will be accessible on port 8080.
 
 ### Running the tests
 
-This command-line will execute E2E tests:
+Command-line for executing E2E tests:
 
     FORM3_API_URL=<put environment URL here> ginkgo --label-filter="e2e" -r
 
@@ -62,9 +62,9 @@ The `FORM3_API_URL` environment variable has to point to a functional environmen
 
 The project uses [Github Actions](https://github.com/features/actions) for CI. There are three pipelines run on every commit to the repository:
 
-* [Static analysis](actions/workflows/static_analysis.yml) - self describing.
-* [Tests](actions/workflows/test.yml) - runs the usual integration/unit tests.
-* [E2E Tests](actions/workflows/e2e.yml) - runs E2E tests.
+* [Static analysis](/actions/workflows/static_analysis.yml) - self describing.
+* [Tests](/actions/workflows/test.yml) - runs the usual integration/unit tests.
+* [E2E Tests](/actions/workflows/e2e.yml) - runs E2E tests.
 
 Code of the pipelines can be found in [.github/workflows](.github/workflows).
 
