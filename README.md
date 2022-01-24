@@ -134,7 +134,7 @@ The library uses [Ginkgo](https://onsi.github.io/ginkgo/) test framework and [Go
 
 To run non-E2E tests use this command line:
 
-    ginkgo --label-filter="e2e" -r
+    ginkgo --label-filter="!e2e" -r
 
 ## E2E tests
 
