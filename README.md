@@ -62,9 +62,9 @@ The `FORM3_API_URL` environment variable has to point to a functional environmen
 
 The project uses [Github Actions](https://github.com/features/actions) for CI. There are three pipelines run on every commit to the repository:
 
-* [Static analysis](/actions/workflows/static_analysis.yml) - self describing.
-* [Tests](/actions/workflows/test.yml) - runs the usual integration/unit tests.
-* [E2E Tests](/actions/workflows/e2e.yml) - runs E2E tests.
+* [Static analysis](https://github.com/jannis-baratheon/form3-take-home-exercise/actions/workflows/static_analysis.yml) - self describing.
+* [Tests](https://github.com/jannis-baratheon/form3-take-home-exercise/actions/workflows/test.yml) - runs the usual integration/unit tests.
+* [E2E Tests](https://github.com/jannis-baratheon/form3-take-home-exercise/actions/workflows/e2e.yml) - runs E2E tests.
 
 Code of the pipelines can be found in [.github/workflows](.github/workflows).
 
