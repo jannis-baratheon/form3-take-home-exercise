@@ -18,6 +18,104 @@ And then run the HTTP documentation server:
 
 After the server starts the documentation can be found at [this link](http://localhost:6060/pkg/github.com/jannis-baratheon/form3-take-home-exercise/).
 
+# Getting started
+
+## Creating Form3 API client
+
+```go
+import (
+    "net/http"
+
+    "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
+)
+
+// ...
+
+var apiURL string // API URL
+var httpClient *http.Client // the HTTP client to be used for communication with Form3 API
+
+// sample values
+/*
+    apiURL = "http://localhost:8080/v1"
+    httpClient = &http.Client{}
+*/
+
+// ...
+
+client := form3apiclient.NewForm3APIClient(apiURL, httpClient)
+
+// ...
+```
+
+## Creating an account
+
+```go
+import (
+    "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
+)
+
+// ...
+
+var accountData form3apiclient.AccountData // the resource to be created
+
+// sample value
+/*
+    accountData = form3apiclient.AccountData{
+        ID:             uuid.NewString(),
+        OrganisationID: uuid.NewString(),
+        Type:           "accounts",
+        Attributes: form3apiclient.AccountAttributes{
+            AccountClassification: "Personal",
+            Name:                  []string{"Jan Kowalski", "Jasiu Kowalski"},
+            Country:               "PL",
+        },
+    }
+*/
+
+// ...
+
+resp, err := client.Accounts().Create(context.Background(), accountData)
+
+// ...
+```
+
+## Fetching an account
+
+```go
+import (
+    "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
+)
+
+// ...
+
+var resourceID string // the ID of the resource to fetch (e.g. "3e93cb04-7d07-11ec-90d6-0242ac120003")
+
+// ...
+
+accountData, err := client.Accounts().Get(context.Background(), resourceID)
+
+// ...
+```
+
+## Deleting an account
+
+```go
+import (
+    "github.com/jannis-baratheon/form3-take-home-exercise/form3apiclient"
+)
+
+// ...
+
+var resourceID string // the ID of the resource to be deleted (e.g. "3e93cb04-7d07-11ec-90d6-0242ac120003")
+var resourceVersion int64 // concurrency control (optimistic locking) - the version number of the resource to be deleted (e.g. 0)
+
+// ...
+
+err := client.Accounts().Delete(context.Background(), resourceID, resourceVersion)
+
+// ...
+```
+
 # Static analysis
 
 The project uses [golangci-lint](https://golangci-lint.run) for [static analysis](https://en.wikipedia.org/wiki/Static_program_analysis).
