@@ -20,7 +20,7 @@ After the server starts the documentation can be found at [this link](http://loc
 
 # Static analysis
 
-The project uses [golangci-lint](https://github.com/golangci/golangci-lint) for [static analysis](https://en.wikipedia.org/wiki/Static_program_analysis).
+The project uses [golangci-lint](https://golangci-lint.run) for [static analysis](https://en.wikipedia.org/wiki/Static_program_analysis).
 
 To run code analysis use this command after [installing golangci-lint](https://golangci-lint.run/usage/install/) on your machine:
 
@@ -40,15 +40,15 @@ To run non-E2E tests use this command line:
 
 ## E2E tests
 
-### Environment
-
 Apart from the usual integration/unit tests there are also E2E tests that require a working Form3 API environment.
 
-You can use [docker-compose](https://docs.docker.com/compose/) and the provided [docker-compose YML file](docker/docker-compose.ym) to start an enviroment locally:
+### Environment
+
+You can use [docker-compose](https://docs.docker.com/compose/) and the provided [docker-compose YML file](docker/docker-compose.ym) to start a test enviroment locally:
 
     docker-compose -f docker/docker-compose.yml up -d
 
-The enviroment will start on port 8080.
+The enviroment will be accessible on port 8080.
 
 ### Running the tests
 
